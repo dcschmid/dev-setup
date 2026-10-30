@@ -1,18 +1,18 @@
-# Delta by Zed Industries · Integration ins Framework-Devkit
+# Delta by Zed Industries · Integration into the Framework Devkit
 
-Stand: 30.10.2026. Delta ist eine **eigene** Beta-Anwendung neben dem Zed-Editor. Die Git-CLI `git-delta` (Pager) ist **nicht** dasselbe und belegt möglicherweise bereits den Befehl `delta`.
+Status: 2026-10-30. Delta is a **separate** beta application alongside the Zed editor. The Git CLI `git-delta` (pager) is **not** the same thing and may already occupy the `delta` command.
 
-## Einsatzempfehlung
+## Usage recommendation
 
-- **Zed**: täglicher Editor für Astro/Next.js/TypeScript/Defold, Claude/Codex ACP oder CLI, OMP über Terminal.
-- **Delta**: Agent-Threads, mehrstufige Änderungen, Reviews mit nachvollziehbarer Historie zwischen Commits, gelegentliche Kollaboration.
-- GitHub und GitLab bleiben die Source of Truth. Delta benutzt die vorhandenen Git-Repositories und benötigt für Projekte eine Git-Remote-Verbindung.
+- **Zed**: daily editor for Astro/Next.js/TypeScript/Defold, Claude/Codex ACP or CLI, OMP via terminal.
+- **Delta**: agent threads, multi-step changes, reviews with traceable history between commits, occasional collaboration.
+- GitHub and GitLab remain the source of truth. Delta uses the existing Git repositories and requires a Git remote connection for projects.
 
-## Voraussetzungen
+## Prerequisites
 
-Linux x86_64 mit glibc, Zed-Account sowie Online-Anmeldung bei Delta und Zustimmung zur Delta-Early-Access-Vereinbarung. Delta läuft unter Fedora (Systembibliotheken müssen kompatibel sein). Der kostenlose Personal-Tarif unterstützt eigene API-Keys/externe Agenten, der kostenpflichtige Pro-Tarif gehostete Modelle. Details: https://delta.dev/pricing.
+Linux x86_64 with glibc, a Zed account, plus online sign-in to Delta and acceptance of the Delta early-access agreement. Delta runs on Fedora (system libraries must be compatible). The free Personal tier supports your own API keys/external agents; the paid Pro tier supports hosted models. Details: https://delta.dev/pricing.
 
-## Sicher installieren (optional)
+## Safe installation (optional)
 
 ```bash
 ./scripts/install-delta.sh --dry-run
@@ -20,44 +20,44 @@ Linux x86_64 mit glibc, Zed-Account sowie Online-Anmeldung bei Delta und Zustimm
 ./scripts/install-delta.sh --status
 ```
 
-Der Wrapper lädt das **offizielle** Skript `https://delta.dev/install.sh` per HTTPS in eine temporäre Datei und führt es aus. Bei Bedarf die Quelle vor Ausführung selbst prüfen. Es installiert in `~/.local/delta.app` und verlinkt `~/.local/bin/delta`; der Wrapper überschreibt keine fremde CLI gleichen Namens. Kein `sudo`. Nach der Installation ggf. Kitty/Zed neu starten, damit PATH aktualisiert ist.
+The wrapper downloads the **official** script `https://delta.dev/install.sh` over HTTPS into a temporary file and executes it. Inspect the source yourself before running it, if needed. It installs into `~/.local/delta.app` and links `~/.local/bin/delta`; the wrapper does not overwrite a foreign CLI of the same name. No `sudo`. After installation, restart Kitty/Zed if needed so the PATH is updated.
 
-Alternativ die App von https://delta.dev/download als Linux-x86_64-Archiv beziehen und die offizielle Installationsanleitung nutzen: https://delta.dev/docs/installation.
+Alternatively, obtain the app from https://delta.dev/download as a Linux x86_64 archive and use the official installation guide: https://delta.dev/docs/installation.
 
-Start: `delta` oder der Zed-Task **Delta · Open collaboration app (optional)**. Im Delta-Welcome-Screen anmelden. In Zed und Delta getrennte Arbeitsflächen einplanen, da Delta **nicht** einfach als ACP-Panel innerhalb Zeds läuft.
+Start: `delta` or the Zed task **Delta · Open collaboration app (optional)**. Sign in on the Delta welcome screen. Plan separate workspaces in Zed and Delta, since Delta does **not** simply run as an ACP panel inside Zed.
 
-## Agenten · Was wirklich unterstützt ist
+## Agents · What is actually supported
 
-**Claude Code**: offizielles Delta-Plugin zum Sync bestehender Claude-CLI-Sitzungen (Claude Code 2.1.303+ und Delta 0.22.0+). Das Devkit installiert es **nicht** automatisch:
+**Claude Code**: official Delta plugin for syncing existing Claude CLI sessions (Claude Code 2.1.303+ and Delta 0.22.0+). The Devkit does **not** install it automatically:
 
 ```bash
 claude plugin marketplace add zed-industries/delta-claude
 claude plugin install delta@zed-industries
 ```
 
-Neue Claude-Session starten, `/delta` prüfen und bei Bedarf einmal `/delta share` verwenden. **Nicht** `/delta setup` auf automatische Team-Synchronisierung stellen, bevor private/professionelle Datengrenzen geklärt sind. Vor Benutzung mit der vorhandenen `cswap`-Rotation die Plugin-Kompatibilität in einer Testsession prüfen. Plugin-/Claude-Installation dürfen nicht mit dem Devkit-Installer verwechselt werden.
+Start a new Claude session, check `/delta`, and use `/delta share` once if needed. Do **not** set `/delta setup` to automatic team synchronization before private/professional data boundaries are clarified. Before use, check plugin compatibility with the existing `cswap` rotation in a test session. Do not confuse the plugin/Claude installation with the Devkit installer.
 
-**Codex CLI**: Eine gleichwertige offizielle Delta-Sitzungssynchronisierung ist nicht dokumentiert. Die Delta-App selbst kann OpenAI-Modelle per ChatGPT-Plus/Pro-Anmeldung nutzen (separat vom Codex-CLI-Agenten). Das bedeutet nicht, dass bestehende Codex-Sessions automatisch importiert werden. Codex in Zed über ACP/CLI unverändert lassen.
+**Codex CLI**: an equivalent official Delta session synchronization is not documented. The Delta app itself can use OpenAI models via a ChatGPT Plus/Pro login (separate from the Codex CLI agent). This does not mean that existing Codex sessions are imported automatically. Leave Codex in Zed via ACP/CLI unchanged.
 
-**YOLO-Auto / OMP**: Die Integration für Pi ist laut Delta-Roadmap/CLI noch in Arbeit, für OMP keine gleichwertige fertige offizielle Integration belegt. Deshalb YOLO-Auto weiter separat in Zed-Terminal-Threads nutzen.
+**YOLO-Auto / OMP**: the integration for Pi is still in progress according to the Delta roadmap/CLI; no equivalent finished official integration is documented for OMP. Therefore, continue using YOLO-Auto separately in Zed terminal threads.
 
-**Lokale Modelle**: Delta kann auf dem Desktop auch kompatible OpenAI-/Anthropic-Endpunkte verbinden; das ist ein eigener Modellanbieter und keine direkte Verbindung zu TinySearch/TinyContext/MCP. MCP-Support steht laut Roadmap noch in Arbeit. Nicht automatisch lokale Endpoints aufsetzen.
+**Local models**: Delta can also connect compatible OpenAI/Anthropic endpoints on the desktop; that is a separate model provider and no direct connection to TinySearch/TinyContext/MCP. MCP support is still in progress according to the roadmap. Do not set up local endpoints automatically.
 
-## Datenschutz · besonders wichtig für berufliche GitLab-Repositories
+## Data protection · especially important for professional GitLab repositories
 
-Delta ist kein rein lokaler Git-Diff-Viewer. Teilen/Sync kann **uncommittete**, **unstaged** und **untracked** Dateien, Nachrichten, Tool-Inputs/-Outputs und Bilder zu DeltaDB synchronisieren. Git-ignorierte Dateien sind laut Plugin-Doku ausgeschlossen; das ersetzt aber keine Sicherheitsprüfung. Team-Teilen kann Daten allen Organisationsmitgliedern zugänglich machen. Einmal geteilte Sitzungen lassen sich laut Doku nicht einfach auf privat zurückschalten. Am sichersten: zunächst Demo-/Testrepo, manuelles `/delta share`, Sichtbarkeit auf *Just me*, keine `.env`/Zugangsdaten im Verlauf; Firmenpolicy vor Nutzung einhalten.
+Delta is not a purely local Git diff viewer. Sharing/sync can synchronize **uncommitted**, **unstaged**, and **untracked** files, messages, tool inputs/outputs, and images to DeltaDB. Git-ignored files are excluded according to the plugin documentation; that does not replace a security check, however. Team sharing can make data accessible to all organization members. Once shared sessions cannot easily be switched back to private according to the documentation. Safest: start with a demo/test repo, manual `/delta share`, visibility set to *Just me*, no `.env`/credentials in the history; comply with company policy before use.
 
-Der Devkit-Installer **richtet weder das Delta-Plugin noch Sync ein**. Die optionale Delta-App benötigt für Workspaces eine Internetverbindung und einen Account. Wenn du aus Sicherheitsgründen offline bleibst, nutze weiterhin Zed + lokale CLI-Agenten.
+The Devkit installer **sets up neither the Delta plugin nor sync**. The optional Delta app requires an internet connection and an account for workspaces. If you stay offline for security reasons, continue using Zed + local CLI agents.
 
-## Updates und Fehlerbehebung
+## Updates and troubleshooting
 
 ```bash
-./scripts/install-delta.sh --update  # Delta-App per offizieller CLI aktualisieren
-# alternativ:
+./scripts/install-delta.sh --update  # update the Delta app via the official CLI
+# alternatively:
 delta update --check
 delta update
 ```
 
-Wenn `delta` stattdessen `git-delta` ausführt: `type -a delta`, `readlink -f ~/.local/bin/delta` prüfen. Ein vorhandenes Git-Diff-Pager-Binary nicht ungefragt überschreiben. Weitere Details und eine alternative Installation: https://delta.dev/docs/installation.
+If `delta` instead runs `git-delta`: check `type -a delta`, `readlink -f ~/.local/bin/delta`. Do not overwrite an existing Git diff pager binary without asking. Further details and an alternative installation: https://delta.dev/docs/installation.
 
-Quellen: https://delta.dev/docs/installation · https://delta.dev/docs/cli/claude-code · https://delta.dev/docs/agents/models-and-providers · https://delta.dev/pricing · https://delta.dev/roadmap.
+Sources: https://delta.dev/docs/installation · https://delta.dev/docs/cli/claude-code · https://delta.dev/docs/agents/models-and-providers · https://delta.dev/pricing · https://delta.dev/roadmap.

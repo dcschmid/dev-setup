@@ -1,55 +1,55 @@
-# Fehlerbehebung · Fedora / Zed / Framework 16
+# Troubleshooting · Fedora / Zed / Framework 16
 
-## Zed startet nicht oder zeigt Grafikfehler
+## Zed does not start or shows graphics errors
 
-Zed für Linux benötigt Vulkan 1.3 und Desktop-Portals. Teste:
+Zed for Linux requires Vulkan 1.3 and desktop portals. Test:
 
 ```bash
-vulkaninfo --summary                  # falls vulkan-tools installiert
-nvidia-smi                            # falls NVIDIA-Treiber genutzt wird
+vulkaninfo --summary                  # if vulkan-tools is installed
+nvidia-smi                            # if an NVIDIA driver is used
 systemctl --user status xdg-desktop-portal
 ```
 
-Auf Fedora mit KDE/GNOME/Cinnamon müssen die **zur tatsächlichen Desktop-Session passenden** xdg-desktop-portal-Backends laufen; ein fremdes Backend nicht blind dazuinstallieren. Wenn `vulkaninfo` fehlt, ist `vulkan-tools` unter Fedora ein nützliches Diagnosepaket (`sudo dnf install vulkan-tools`). Wähle die aktive Vulkan-GPU und Driver-Probleme zunächst nach Zeds offizieller Linux-Anleitung, nicht durch Abschalten von Secure Boot. Zed-Installation verlangt außerdem FileChooser/OpenURI und Secret/Secrets-Portale.
+On Fedora with KDE/GNOME/Cinnamon, the xdg-desktop-portal backends **matching the actual desktop session** must be running; do not blindly install a foreign backend. If `vulkaninfo` is missing, `vulkan-tools` is a useful diagnostic package on Fedora (`sudo dnf install vulkan-tools`). Choose the active Vulkan GPU and address driver problems first according to Zed's official Linux guide, not by disabling Secure Boot. Zed installation also requires the FileChooser/OpenURI and Secret/Secrets portals.
 
-## Nur Standardschrift statt JetBrains Mono
+## Only the standard font instead of JetBrains Mono
 
 ```bash
 fc-match 'JetBrains Mono'
 ```
 
-Wenn keine echte JetBrains-Mono-Familie installiert ist, im Zed-Editor einfach `Zed Mono` als Schrift setzen oder **selbst** JetBrains Mono aus einer vertrauenswürdigen Quelle installieren. Im Paket liegen keine Fonts.
+If no real JetBrains Mono family is installed, simply set `Zed Mono` as the font in the Zed editor or **install** JetBrains Mono yourself from a trusted source. The package contains no fonts.
 
-## Astro/React/TypeScript oder Tailwind ohne Autocomplete
+## Astro/React/TypeScript or Tailwind without autocomplete
 
-Extension-Installation in `zed: extensions` kontrollieren. `Astro` und `Defold` brauchen ihre Extensions; TypeScript/TSX und Tailwind sind in Zed integriert bzw. von Zed unterstützte Language-Server. Den Projekt-Root öffnen und `node_modules` / lokale Projekt-Dependencies installiert haben. Bei Astro-Projekten stimmen die Erweiterungen/Tailwind-Konfiguration nur, wenn das jeweilige Projekt tatsächlich Tailwind nutzt. Das LSP-Settings-Beispiel in `config/settings.json` folgt der offiziellen Astro-Anleitung.
+Check the extension installation in `zed: extensions`. `Astro` and `Defold` need their extensions; TypeScript/TSX and Tailwind are integrated in Zed or Zed-supported language servers. Open the project root and have `node_modules` / local project dependencies installed. For Astro projects, the extensions/Tailwind configuration is only correct if the respective project actually uses Tailwind. The LSP settings example in `config/settings.json` follows the official Astro guide.
 
-## Prettier verändert zu viele Dateien
+## Prettier changes too many files
 
-Standardmäßig nur Web-Sprachen beim Speichern formatieren. Wenn dein Repo spezielle Prettier/ESLint/Biome-Regeln braucht, lege sie **im Repo** fest und konfiguriere bei Bedarf `languages.*.formatter` dort. Zed-`format_on_save` kann projektspezifisch auf `off` gestellt werden; Lua und Defold stehen bereits auf `off`.
+By default, only format web languages on save. If your repo needs special Prettier/ESLint/Biome rules, define them **in the repo** and configure `languages.*.formatter` there if needed. Zed's `format_on_save` can be set to `off` per project; Lua and Defold are already on `off`.
 
-## Tasks zeigen „No package.json" oder „No script"
+## Tasks show "No package.json" or "No script"
 
-Der globale Task findet keine geeignete lokale Package-Konfiguration. Öffne das richtige Repo oder wähle eine Datei innerhalb des Pakets. Füge für dein Next.js-/Astro-Paket nötige `scripts` unter `package.json` hinzu oder erstelle passende `.zed/tasks.json`-Tasks in der Repo-Wurzel. In großen Monorepos sind projektlokale Tasks oft zuverlässiger als globale.
+The global task finds no suitable local package configuration. Open the right repo or choose a file inside the package. Add the necessary `scripts` under `package.json` for your Next.js/Astro package, or create matching `.zed/tasks.json` tasks in the repo root. In large monorepos, project-local tasks are often more reliable than global ones.
 
-## YOLO/Claude/Codex-Launcher fehlen in Zed
+## YOLO/Claude/Codex launchers missing in Zed
 
-`./scripts/check.sh` zeigt, ob sie in einem interaktiven zsh erkennbar sind. Prüfe im normalen Kitty-Terminal:
+`./scripts/check.sh` shows whether they are recognizable in an interactive zsh. Check in a normal Kitty terminal:
 
 ```zsh
 whence -w claude codex yolo-working yolo-private
 ```
 
-Wenn der vorhandene OMP-Stack Launcher **anders benennt**, die zwei Task-Namen/Wrapper entsprechend anpassen. Das Devkit installiert absichtlich kein neues YOLO-Auto und erzeugt keine ungetesteten Profile. Für Claude nutze den CLI-Task, wenn du deine cswap-Rotation brauchst; ACP kann eigene Sitzungen/Anmeldungen haben. Codex wird im Paket **ohne** Rotation gestartet. Wenn zsh direnv/nvm erst in interaktiven Shells initialisiert, öffne Zed am besten aus einer korrekt initialisierten Session oder passe die Desktop-Umgebungsvariablen an. Keine API-Schlüssel in `settings.json` schreiben.
+If the existing OMP stack launcher has a **different name**, adjust the two task names/wrappers accordingly. The Devkit deliberately installs no new YOLO-Auto and creates no untested profiles. For Claude, use the CLI task if you need your cswap rotation; ACP can have its own sessions/logins. Codex is started in the package **without** rotation. If zsh direnv/nvm only initializes in interactive shells, open Zed from a correctly initialized session or adjust the desktop environment variables. Do not write API keys into `settings.json`.
 
-## TinySearch/TinyContext erscheinen doppelt oder fehlen
+## TinySearch/TinyContext appear twice or are missing
 
-Nicht zusätzlich unter Zeds eigenen MCP-Servern einrichten, wenn der ACP-/CLI-Agent den Server bereits aus seiner nativen Konfiguration lädt. Die Zed-ACP-Unterstützung für MCP-Weitergabe ist agentabhängig. Erst den konkreten Agent-Thread prüfen, bevor ein zweiter Server hinzugefügt wird. Das Devkit erstellt keine MCP-Einträge.
+Do not additionally set them up under Zed's own MCP servers if the ACP/CLI agent already loads the server from its native configuration. Zed ACP support for MCP pass-through is agent-dependent. Check the specific agent thread first before adding a second server. The Devkit creates no MCP entries.
 
-## Bob-Build scheitert
+## Bob build fails
 
-`BOB_JAR` oder `~/.config/zed-devkit/bob.path` setzen; `game.project` muss in der aktuellen Arbeitswurzel liegen. Aktuelle offizielle Bob-Dokumentation nennt OpenJDK 25; eine ältere JDK-Installation kann unzureichend sein. Bob-Version an Defold-Version anpassen. Der Editor-Build in Defold bleibt eine sichere Alternative. Über den Task **Defold · Bob Build** nicht versehentlich in einem Web-Repo starten.
+Set `BOB_JAR` or `~/.config/zed-devkit/bob.path`; `game.project` must be in the current working root. The current official Bob documentation names OpenJDK 25; an older JDK installation may be insufficient. Match the Bob version to the Defold version. The editor build in Defold remains a safe alternative. Do not accidentally start via the task **Defold · Bob Build** in a web repo.
 
-## Backup oder Rollback blockiert
+## Backup or rollback blocked
 
-Originale liegen in `~/.local/share/zed-devkit/backups`. `restore.sh` vergleicht Dateiprüfsummen und schützt nachträgliche Änderungen. Bei Bedarf erst eigene manuelle Kopien machen, dann mit `--force` explizit wiederherstellen.
+The originals are in `~/.local/share/zed-devkit/backups`. `restore.sh` compares file checksums and protects against later changes. If needed, make your own manual copies first, then restore explicitly with `--force`.

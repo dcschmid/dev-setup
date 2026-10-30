@@ -2,15 +2,15 @@
 
 ## 1.1.0 — 2026-10-30
 
-- Delta by Zed Industries als **optionale** Zweitanwendung integriert.
-- 14. Zed-Task zum Öffnen von Delta, ohne neue Account-/Agent-Konfiguration.
-- Gesondertes, bewusst opt-in Install-/Update-Skript und Delta-Anleitung.
-- Claude Code Delta Plugin nur als dokumentierte manuelle Option; keine Uploads/Auto-Sync durch Installer.
+- Delta by Zed Industries integrated as an **optional** second application.
+- 14th Zed task to open Delta, without new account/agent configuration.
+- Separate, deliberately opt-in install/update script and Delta guide.
+- Claude Code Delta plugin only as a documented manual option; no uploads/auto-sync by the installer.
 
 ## 1.0.0 — 2026-10-30
 
-- Zed-Setup für Fedora 44 / Framework 16 mit Catppuccin-Mocha-Dark-Theming.
-- Astro/Next/TS/Defold/Lua-Extensions und Spracheinstellungen.
-- 13 globale Zed-Tasks inkl. Claude CLI, direktem Codex CLI und bestehenden OMP-Launchern.
-- Sichere JSONC-Übernahme, Backups, Prüfung und geschützter Rollback.
-- Keine Änderungen an bestehenden CLI-, MCP-, Repo-, Kitty- oder Git-Profilen.
+- Zed setup for Fedora 44 / Framework 16 with Catppuccin Mocha dark theming.
+- Astro/Next/TS/Defold/Lua extensions and language settings.
+- 13 global Zed tasks incl. Claude CLI, direct Codex CLI, and existing OMP launchers.
+- Safe JSONC takeover, backups, checks, and protected rollback.
+- No changes to existing CLI, MCP, repo, Kitty, or Git profiles.

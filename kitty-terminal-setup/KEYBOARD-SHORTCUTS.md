@@ -1,29 +1,29 @@
-# Kitty Workspace Pack v1.6.0 — Kurzreferenz
+# Kitty Workspace Pack v1.6.0 — Quick reference
 
-| Taste | Aktion |
+| Key | Action |
 |---|---|
-| `Ctrl+Shift+T` | Tab im aktuellen Arbeitsverzeichnis öffnen |
-| `Ctrl+Shift+W` | Aktuellen Tab schließen |
-| `Alt+1` … `Alt+9` | Zu Tab 1–9 springen |
-| `Ctrl+PageUp` / `Ctrl+PageDown` | Tab wechseln |
-| `Ctrl+Space`, `W` | Zusätzliches Kitty-Fenster |
-| `Ctrl+Space`, `N` | Tab umbenennen |
-| `Ctrl+Space`, `S` | Session jetzt manuell speichern |
-| `Ctrl+Space`, `E` | Datei-Picker |
-| `Ctrl+Space`, `D` | Verzeichnis-Picker |
-| `Ctrl+Space`, `H` | Scrollback-Pager |
-| `Ctrl+Space`, `O` | Ausgabe des letzten Kommandos |
-| `Ctrl+Space`, `C` | Letzte Kommandoausgabe kopieren |
-| `Ctrl+Space`, `Q` | Quick-Access-Terminal |
-| `Ctrl+Space`, `K` | Command Palette |
-| `Ctrl+Space`, `T` | Theme-Auswahl |
-| `Ctrl+Space`, `R` | Kitty-Config neu laden |
-| `Ctrl+Space`, `L` | URL-Hints |
-| `Ctrl+Space`, `F` | Pfad-Hints |
-| `Ctrl+R` | Atuin-Shell-History |
-| `Ctrl+T` | fzf-Dateiauswahl |
-| `Alt+C` | fzf-Verzeichniswahl |
+| `Ctrl+Shift+T` | Open a tab in the current working directory |
+| `Ctrl+Shift+W` | Close the current tab |
+| `Alt+1` … `Alt+9` | Jump to tab 1–9 |
+| `Ctrl+PageUp` / `Ctrl+PageDown` | Switch tab |
+| `Ctrl+Space`, `W` | Additional Kitty window |
+| `Ctrl+Space`, `N` | Rename tab |
+| `Ctrl+Space`, `S` | Manually save the session now |
+| `Ctrl+Space`, `E` | File picker |
+| `Ctrl+Space`, `D` | Directory picker |
+| `Ctrl+Space`, `H` | Scrollback pager |
+| `Ctrl+Space`, `O` | Output of the last command |
+| `Ctrl+Space`, `C` | Copy the last command output |
+| `Ctrl+Space`, `Q` | Quick Access terminal |
+| `Ctrl+Space`, `K` | Command palette |
+| `Ctrl+Space`, `T` | Theme selection |
+| `Ctrl+Space`, `R` | Reload Kitty config |
+| `Ctrl+Space`, `L` | URL hints |
+| `Ctrl+Space`, `F` | Path hints |
+| `Ctrl+R` | Atuin shell history |
+| `Ctrl+T` | fzf file selection |
+| `Alt+C` | fzf directory selection |
 
-Weitere CLI-Kommandos: `gwl`/`gwnew`/`gwcd`/`gwrm` (Git Worktrees), `gd` (Git-Diff mit delta), `ll`/`tree` (eza), `b` (bat), `kd` (Kitty Diff), `img` (Kitty iCat), `z <ordner>` (zoxide), `lg` (lazygit, falls installiert).
+Further CLI commands: `gwl`/`gwnew`/`gwcd`/`gwrm` (Git worktrees), `gd` (Git diff with delta), `ll`/`tree` (eza), `b` (bat), `kd` (Kitty Diff), `img` (Kitty iCat), `z <folder>` (zoxide), `lg` (lazygit, if installed).
 
-**Automatischer Start:** 2× Unified Frontend, alle weiteren Tabs entstehen ausschließlich durch dich und bleiben im Autosave. Alte Projekt-Session-Tasten existieren nicht mehr.
+**Automatic startup:** 2× Unified Frontend; all further tabs are created exclusively by you and remain in the autosave. Old project session keys no longer exist.

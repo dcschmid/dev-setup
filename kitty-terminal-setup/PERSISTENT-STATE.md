@@ -1,53 +1,53 @@
 # Persistent Kitty State — v1.6.0
 
-Kitty startet mit der Datei `~/.config/kitty/last-state.kitty-session` (bei abweichendem `XDG_CONFIG_HOME` entsprechend dort). **Nur beim ersten Start** wird die Vorlage mit 2× Unified Frontend eingesetzt.
+Kitty starts with the file `~/.config/kitty/last-state.kitty-session` (or the corresponding location under a different `XDG_CONFIG_HOME`). **Only on the first start** is the template with 2× Unified Frontend applied.
 
-## Was wiederhergestellt wird
+## What is restored
 
-Fensterstruktur, Tabs, deren Namen, Arbeitsverzeichnisse und Layoutinformationen, soweit Kitty sie speichert. Bei Wayland bestimmt der Compositor die tatsächliche Platzierung auf dem Monitor; Bildschirmkoordinaten können nicht garantiert werden.
+Window structure, tabs, their names, working directories, and layout information, insofar as Kitty stores them. On Wayland, the compositor determines the actual placement on the monitor; screen coordinates cannot be guaranteed.
 
-**Nicht** wiederhergestellt: laufende Shell-Prozesse oder Inhalte der interaktiven Shell, Editor-Puffer, laufende Webserver und Coding-Agenten. Diese werden aus Sicherheitsgründen nicht automatisch neu gestartet. `--use-foreground-process` wird nicht verwendet.
+**Not** restored: running shell processes or the contents of the interactive shell, editor buffers, running web servers, and coding agents. These are not automatically restarted for security reasons. `--use-foreground-process` is not used.
 
-## Wie Autosave funktioniert
+## How autosave works
 
-`watcher state-autosave.py` aktiviert einen globalen Kitty-Watcher. Er veranlasst etwa alle 10 Sekunden und bei Tab-/Fokus-/Titeländerungen einen Save in eine temporäre Datei.
+`watcher state-autosave.py` enables a global Kitty watcher. It triggers a save into a temporary file roughly every 10 seconds and on tab/focus/title changes.
 
-Nur wenn diese eine plausible Session mit `new_tab` und `launch` enthält, ersetzt sie atomar die vorherige `last-state.kitty-session`. Ein Fehler hinterlässt die vorherige Datei und einen generischen Hinweis in:
+Only if this contains a plausible session with `new_tab` and `launch` does it atomically replace the previous `last-state.kitty-session`. An error leaves the previous file in place and a generic hint in:
 
 ```text
 ~/.local/state/kitty-workspace-pack/autosave-error.log
 ```
 
-Die letzten maximal zwölf zeitlich versetzten Kopien liegen unter:
+The last up-to-twelve time-staggered copies are under:
 
 ```text
 ~/.local/state/kitty-workspace-pack/autosave-backups/
 ```
 
-Der Quick Access verwendet `quick-access-kitty.conf` ohne Watcher und ohne startup_session. Das vermeidet, dass ein transientes Mini-Terminal die eigentliche Session überschreibt.
+Quick Access uses `quick-access-kitty.conf` without a watcher and without `startup_session`. This prevents a transient mini-terminal from overwriting the actual session.
 
-## Praktischer Test auf Fedora / Wayland
+## Practical test on Fedora / Wayland
 
-1. Starte `Kitty Workspace` und öffne einen neuen Testtab mit `Ctrl+Shift+T`.
-2. Wechsel in diesem Testtab in ein existierendes Verzeichnis, benenne den Tab um (`Ctrl+Space, N`).
-3. Warte mindestens 15 Sekunden und prüfe außerhalb von Kitty mit `./state-status.py` Zeitpunkt und Tabzahl.
-4. Schließe Kitty normal und starte `Kitty Workspace` erneut. Prüfe Tabtitel, Tabanzahl und Verzeichnis.
-5. Teste getrennt `Ctrl+Space, S` (manueller Save) und das Quick-Access-Terminal. Quick Access darf den Hauptzustand nicht überschreiben.
+1. Start `Kitty Workspace` and open a new test tab with `Ctrl+Shift+T`.
+2. In this test tab, change into an existing directory and rename the tab (`Ctrl+Space, N`).
+3. Wait at least 15 seconds and check the timestamp and tab count outside of Kitty with `./state-status.py`.
+4. Close Kitty normally and start `Kitty Workspace` again. Check tab titles, tab count, and directory.
+5. Test `Ctrl+Space, S` (manual save) and the Quick Access terminal separately. Quick Access must not overwrite the main state.
 
-**Diese Live-Prüfung ist auf deinem Framework notwendig.** Unser automatisierter Watcher-Test ersetzt keine echte Ausführung auf Fedora/KDE-Wayland.
+**This live check is necessary on your Framework.** Our automated watcher test does not replace a real run on Fedora/KDE-Wayland.
 
-## Reparatur, Migration und Reset
+## Repair, migration, and reset
 
-Nie die Live-Session manuell editieren, während Kitty läuft: Der Watcher könnte sie überschreiben.
+Never edit the live session manually while Kitty is running: the watcher could overwrite it.
 
 ```bash
-./migrate-kitty-state.py    # nur bekannte alte Startertabs entfernen
-./reset-kitty-state.sh      # alle gespeicherten Tabs verwerfen; Backup vor Reset
-./state-status.py           # lesende Statusprüfung
+./migrate-kitty-state.py    # only remove known old starter tabs
+./reset-kitty-state.sh      # discard all saved tabs; backup before reset
+./state-status.py           # read-only status check
 ```
 
-Für den historischen Fehler durch alte Launcher gibt es `repair-v1.5-startup.sh`. Verwende immer den sichtbaren **Kitty Workspace**-Launcher statt älterer `kitty --session melody-mind...`-Starter.
+For the historical error caused by old launchers there is `repair-v1.5-startup.sh`. Always use the visible **Kitty Workspace** launcher instead of older `kitty --session melody-mind...` starters.
 
-## Mehrere Instanzen
+## Multiple instances
 
-Der Pack-Launcher benutzt `kitty --single-instance --instance-group=kitty-workspace`, damit reguläre neue Fenster zu demselben Kitty-Prozess gehören. Eine anders gestartete, unabhängige Kitty-Instanz mit derselben Config kann trotzdem dieselbe Session-Datei verwenden. Vermeide deshalb parallele unabhängige Instanzen für den persistenten Workspace.
+The pack launcher uses `kitty --single-instance --instance-group=kitty-workspace` so that regular new windows belong to the same Kitty process. A differently started, independent Kitty instance with the same config can still use the same session file. Avoid parallel independent instances for the persistent workspace.

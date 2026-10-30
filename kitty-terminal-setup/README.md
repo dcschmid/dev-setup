@@ -1,25 +1,25 @@
 # Kitty Workspace Pack v1.6.0 — Fedora / Framework 16
 
-Ein bewusst schlankes, lokal betriebenes Kitty-/Zsh-Setup für dein **Framework Laptop 16 mit Fedora 44 (KDE Plasma oder GNOME auf Wayland)**.
+A deliberately lean, locally run Kitty/Zsh setup for your **Framework Laptop 16 with Fedora 44 (KDE Plasma or GNOME on Wayland)**.
 
-## Was beim Start erscheint
+## What appears at startup
 
-Nur beim ersten Start bzw. nach einem bewussten Reset:
+Only on the first start or after a deliberate reset:
 
 ```text
 Unified Frontend 1    ~/dev/gitlab/unified-frontend
 Unified Frontend 2    ~/dev/gitlab/unified-frontend
 ```
 
-Danach erstellst, schließt und benennst **du** deine Tabs und Fenster. Kitty stellt den jeweils zuletzt gesicherten Zustand wieder her. **Keine alten Melody-Mind-Projektlauncher oder vordefinierten OMP-/DEV-/TEST-Tabs.**
+After that, **you** create, close, and rename your tabs and windows. Kitty restores the last saved state each time. **No old Melody-Mind project launchers or predefined OMP/DEV/TEST tabs.**
 
-Der sichtbare **Kitty Workspace**-Launcher verwendet `--single-instance --instance-group=kitty-workspace`, damit wiederholte Aufrufe möglichst in derselben Kitty-Instanz landen (neue OS-Fenster sind dabei möglich). Separat gestartete, unabhängige Kitty-Prozesse können weiterhin unterschiedliche Zustände speichern; verwende für diesen Workspace daher denselben Launcher.
+The visible **Kitty Workspace** launcher uses `--single-instance --instance-group=kitty-workspace` so that repeated invocations land in the same Kitty instance as much as possible (new OS windows are possible in the process). Separately started, independent Kitty processes can still store different states; use the same launcher for this workspace.
 
-Der Zustand enthält Tabs, Titel, Verzeichnisse und Fensterstruktur, **nicht** laufende Shell-Programme (kein automatischer Restart von `pnpm dev`, Claude oder Codex).
+The state contains tabs, titles, directories, and window structure, **not** running shell programs (no automatic restart of `pnpm dev`, Claude, or Codex).
 
-## Installation / Upgrade
+## Installation / upgrade
 
-Entpacken und aus einem normalen Terminal starten:
+Unpack and start from a normal terminal:
 
 ```bash
 unzip kitty-workspace-pack-v1.6.0.zip
@@ -29,42 +29,42 @@ cd kitty-workspace-pack-v1.6.0
 ./state-status.py
 ```
 
-**Empfohlen, wenn du auf Fedora bereits fast alle Tools hast:**
+**Recommended if you already have almost all tools on Fedora:**
 
 ```bash
 ./install.sh --config-only
 ```
 
-Der Config-only-Modus verändert die vom Paket verwalteten Einstellungen, installiert aber **keine Software** und führt **keine Upgrades/Downloads** aus. Er lässt vorhandene persönliche Kitty-Zustände unangetastet.
+The config-only mode changes the settings managed by the package but installs **no software** and runs **no upgrades/downloads**. It leaves existing personal Kitty states untouched.
 
-`./install.sh` fragt bei fehlenden Paketen nach, installiert die Basis über `dnf` und aktualisiert Kitty **nicht automatisch**. `--yes` akzeptiert die normalen fehlenden Abhängigkeiten, aber **keine automatische Kitty-Aktualisierung** und kein optionales Lazygit.
+`./install.sh` asks about missing packages, installs the base via `dnf`, and does **not** update Kitty automatically. `--yes` accepts the normal missing dependencies, but **no automatic Kitty update** and no optional Lazygit.
 
-## Aktuelle Versionen und Quellen (30. Oktober 2026)
+## Current versions and sources (October 30, 2026)
 
-| Komponente | Verifiziert | Verhalten dieses Pakets |
+| Component | Verified | Behavior of this package |
 |---|---|---|
-| Kitty upstream | **0.49.2** | Überprüfen; kein ungefragtes Update |
-| Fedora 44 Kitty RPM | **0.47.1** in der Fedora-Paketübersicht | DNF-Version bleibt Standard, wenn sie installiert ist |
-| nvm | **v0.40.8** | Installation **nur auf expliziten Wunsch** |
-| Atuin | Fedora 44 in der Paketübersicht: **18.12.1** | Ältere vs. neuere Init-Flags werden berücksichtigt |
+| Kitty upstream | **0.49.2** | Check; no unasked update |
+| Fedora 44 Kitty RPM | **0.47.1** in the Fedora package overview | The DNF version stays the default if it is installed |
+| nvm | **v0.40.8** | Installation **only on explicit request** |
+| Atuin | Fedora 44 in the package overview: **18.12.1** | Older vs. newer init flags are taken into account |
 
-Für Kitty:
+For Kitty:
 
 ```bash
-./update-kitty.sh --check       # nur Versionsprüfung
-./update-kitty.sh --dnf         # explizit Fedora-Pakete aktualisieren
-./update-kitty.sh --official    # explizit upstream in ~/.local/kitty.app installieren
+./update-kitty.sh --check       # version check only
+./update-kitty.sh --dnf         # explicitly update the Fedora packages
+./update-kitty.sh --official    # explicitly install upstream into ~/.local/kitty.app
 ```
 
-Die offizielle Installation ist **optional**; Fedora- und Upstream-Binaries sollten nicht unbemerkt vertauscht werden.
+The official installation is **optional**; Fedora and upstream binaries should not be swapped unnoticed.
 
-## Persistenter Zustand — jetzt mit Sicherungen
+## Persistent state — now with backups
 
-- Alle ~10 Sekunden sowie nach relevanten Kitty-Ereignissen wird ein Session-Snapshot angefordert.
-- Vor dem Überschreiben prüft das neue Watcher-Skript die erzeugte Session in einer **temporären Datei**. Ein ungültiger Snapshot ersetzt nicht den letzten gültigen.
-- Zusätzlich wird der vorherige Zustand ca. alle 15 Minuten gesichert; maximal zwölf rotierende Auto-Backups.
-- Der Quick-Access-Kitten benutzt eine **eigene Kitty-Konfigurationsdatei ohne Autosave-Watcher**, damit sein kurzes Terminal den Hauptzustand nicht überschreibt.
-- Das Log enthält nur Fehlertypen, keine Session-Inhalte/Kommandos.
+- A session snapshot is requested roughly every 10 seconds and after relevant Kitty events.
+- Before overwriting, the new watcher script checks the generated session in a **temporary file**. An invalid snapshot does not replace the last valid one.
+- Additionally, the previous state is backed up roughly every 15 minutes; up to twelve rotating auto-backups.
+- The Quick Access kitten uses its **own Kitty configuration file without the autosave watcher**, so its short-lived terminal does not overwrite the main state.
+- The log contains only error types, no session contents/commands.
 
 ```text
 ~/.config/kitty/last-state.kitty-session
@@ -72,66 +72,66 @@ Die offizielle Installation ist **optional**; Fedora- und Upstream-Binaries soll
 ~/.local/state/kitty-workspace-pack/autosave-error.log
 ```
 
-Manuell speichern: `Ctrl+Space, S`.
+Save manually: `Ctrl+Space, S`.
 
-Status prüfen:
+Check status:
 
 ```bash
 ./state-status.py
 ```
 
-**Wichtig:** Ein echter Kitty-Test auf deinem Fedora/Wayland-System bleibt nötig; der Watcher wurde hier mit Mocks getestet, nicht live auf deinem Framework. Siehe `PERSISTENT-STATE.md`.
+**Important:** A real Kitty test on your Fedora/Wayland system is still needed; the watcher was tested here with mocks, not live on your Framework. See `PERSISTENT-STATE.md`.
 
-## Entfernte alte Starttabs / Reset
+## Removed old startup tabs / reset
 
-Falls du aus einem alten v1.5-Zustand noch zwei identifizierbare Melody-Mind-Starttabs mitgebracht hast, **Kitty vollständig schließen**, dann:
+If you brought over two identifiable Melody-Mind startup tabs from an old v1.5 state, **close Kitty completely**, then:
 
 ```bash
 ./migrate-kitty-state.py
 ```
 
-Bei unklaren Sessio­nen wird nichts verändert. Der bisherige Zustand wird bei erfolgreicher Migration vorher gesichert.
+Nothing is changed for unclear sessions. The previous state is backed up before a successful migration.
 
-Wenn du bewusst **alle selbst angelegten Tabs verwerfen** willst, Kitty schließen und:
+If you deliberately want to **discard all self-created tabs**, close Kitty and:
 
 ```bash
 ./reset-kitty-state.sh
 ```
 
-Das Script sichert die alte Datei und setzt dann nur auf die beiden Unified-Frontend-Tabs zurück.
+The script backs up the old file and then resets only to the two Unified Frontend tabs.
 
-## Fehlendes Node / pnpm von deiner letzten Doctor-Ausgabe
+## Missing Node / pnpm from your last doctor output
 
-Unser Zsh-Profil aktiviert zwar das Oh-My-Zsh-NVM-Plugin, **installiert aber nicht NVM, Node oder pnpm**. Damit `node`, `npm` und `pnpm` nach einem Fedora-Neuaufsetzen wieder funktionieren:
+Our Zsh profile activates the Oh-My-Zsh NVM plugin, **but does not install NVM, Node, or pnpm**. So that `node`, `npm`, and `pnpm` work again after a Fedora reinstall:
 
 ```bash
 ./setup-node.sh --check
-./setup-node.sh --install-nvm       # optional, mit Nachfrage
-./setup-node.sh --install-project   # nur bei vorhandener .nvmrc, mit Nachfrage
+./setup-node.sh --install-nvm       # optional, with a prompt
+./setup-node.sh --install-project   # only with an existing .nvmrc, with a prompt
 ```
 
-`NODE-SETUP.md` erklärt die Version aus `.nvmrc`, `package.json`, Corepack und pnpm. **Conda, Rust, uv, Claude, Codex, OMP (Oh My Pi) und Lazygit bleiben optional.** Der neue Doctor stellt diese nicht mehr als gleichwertige Fehler dar.
+`NODE-SETUP.md` explains the version from `.nvmrc`, `package.json`, Corepack, and pnpm. **Conda, Rust, uv, Claude, Codex, OMP (Oh My Pi), and Lazygit remain optional.** The new doctor no longer presents these as equivalent errors.
 
-## Enthaltene Funktionen
+## Included features
 
-Kitty Catppuccin Mocha, Powerline-Tabs, JetBrains Mono (optional), Zsh/Oh My Zsh, Git/gitfast, sicherer NVM-`.nvmrc`-Wechsel, fzf, zoxide, direnv, Atuin lokal mit AI-Bindung deaktiviert, eza, bat, delta, optionale lazygit-TUI und sichere Git-Worktree-Helfer. Dazu Kitty `diff`, `icat`, `choose-files`, Quick Access und Benachrichtigungen für lange Hintergrundkommandos.
+Kitty Catppuccin Mocha, Powerline tabs, JetBrains Mono (optional), Zsh/Oh My Zsh, Git/gitfast, safe NVM `.nvmrc` switching, fzf, zoxide, direnv, Atuin local with AI binding disabled, eza, bat, delta, optional lazygit TUI, and safe Git worktree helpers. Plus Kitty `diff`, `icat`, `choose-files`, Quick Access, and notifications for long background commands.
 
-Die Standard-Shell deines Linux-Accounts wird **nicht** geändert. Das Paket führt keine Agenten automatisch aus.
+The default shell of your Linux account is **not** changed. The package does not run agents automatically.
 
-## Dokumentationswegweiser
+## Documentation guide
 
-- `PERSISTENT-STATE.md`: Autosave, Backups, Test, Migration und Reset
-- `NODE-SETUP.md`: NVM, Node, pnpm und Corepack auf Fedora
-- `TOOLS-GUIDE.md`: Wichtigste Tools und ihre Funktionsweise
-- `KEYBOARD-SHORTCUTS.md`: Alle Tastenkürzel
-- `CLI-POLISH-WORKTREES.md`: Git Worktrees, eza, bat, delta, lazygit
-- `KITTY-KITTENS.md`, `ZSH-EXTRAS.md`, `VISUAL-QOL.md`: Detailreferenzen
-- `CHANGELOG.md`: vollständige Versionshistorie
+- `PERSISTENT-STATE.md`: autosave, backups, test, migration, and reset
+- `NODE-SETUP.md`: NVM, Node, pnpm, and Corepack on Fedora
+- `TOOLS-GUIDE.md`: the most important tools and how they work
+- `KEYBOARD-SHORTCUTS.md`: all keybindings
+- `CLI-POLISH-WORKTREES.md`: Git worktrees, eza, bat, delta, lazygit
+- `KITTY-KITTENS.md`, `ZSH-EXTRAS.md`, `VISUAL-QOL.md`: detailed references
+- `CHANGELOG.md`: full version history
 
-## Deinstallation
+## Uninstall
 
 ```bash
 ./uninstall.sh
 ```
 
-**Bewahrt absichtlich** die persönliche gespeicherte Session, Backups, Secrets, selbst erstellte Sessions, Tools und die bestehende Login-Shell.
+**Deliberately preserves** the personal saved session, backups, secrets, self-created sessions, tools, and the existing login shell.

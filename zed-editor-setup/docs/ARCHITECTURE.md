@@ -1,32 +1,32 @@
-# Architektur und Integrationsgrenzen
+# Architecture and integration boundaries
 
 ```text
 Fedora 44 / Framework 16 / Wayland
-  ├─ Zed Stable (offizielles Linux-Installationsskript)
-  │   ├─ Frontend: Astro Extension; TypeScript/TSX; Tailwind; Emmet
-  │   ├─ Spiele: Defold Extension + Lua Extension
+  ├─ Zed Stable (official Linux installation script)
+  │   ├─ Frontend: Astro extension; TypeScript/TSX; Tailwind; Emmet
+  │   ├─ Games: Defold extension + Lua extension
   │   ├─ Tasks: ~/.config/zed/tasks.json → ~/.local/bin/zed-dev
-  │   ├─ ACP Registry: Claude Agent und Codex (separat in Zed hinzufügen)
-  │   └─ Terminal Threads: claude / codex / yolo-working / yolo-private
-  └─ Bestehender eigener Stack (NICHT modifiziert)
+  │   ├─ ACP Registry: Claude Agent and Codex (added separately in Zed)
+  │   └─ Terminal threads: claude / codex / yolo-working / yolo-private
+  └─ Existing own stack (NOT modified)
       ├─ Claude Code + cswap
-      ├─ Codex CLI (direkt, ohne cxswap/codex-switch)
+      ├─ Codex CLI (direct, without cxswap/codex-switch)
       ├─ OMP / YOLO-Auto (working, private)
-      │   └─ Qwen-Provider wie bereits separat konfiguriert
-      ├─ TinySearch + TinyContext; Blender MCP nur private
+      │   └─ Qwen provider as already configured separately
+      ├─ TinySearch + TinyContext; Blender MCP private only
       ├─ Node / Corepack / pkg manager / direnv / zsh
-      └─ Kitty Workspace Pack / Git Signaturen / Defold 1.14
+      └─ Kitty Workspace Pack / Git signatures / Defold 1.14
 ```
 
-## Wichtige Trennung
+## Important separation
 
-**Zed-Agent vs ACP-Agent vs Terminal Thread** sind unterschiedliche Wege und haben keine identischen Konfigurationszuständigkeiten. ACP-Agenten übernehmen gewöhnlich eigene Modellanmeldungen/Tools; Terminal Threads laufen mit der nativen CLI-Konfiguration. Dieses Paket konfiguriert absichtlich **keine** Zed-LLM-Provider, keine Token und keine zusätzlichen Zed-MCP-Server.
+**Zed agent vs ACP agent vs terminal thread** are different paths and do not have identical configuration responsibilities. ACP agents usually take over their own model logins/tools; terminal threads run with the native CLI configuration. This package deliberately configures **no** Zed LLM providers, no tokens, and no additional Zed MCP servers.
 
-Globaler Task im Zed-Editor: `~/.config/zed/tasks.json`. Projektlokale Einstellungen: `.zed/settings.json` und `.zed/tasks.json` im jeweiligen Repo, bei Bedarf **manuell** hinzufügen. Das Paket greift nie in Repos oder Agent-Dotfiles ein.
+Global task in the Zed editor: `~/.config/zed/tasks.json`. Project-local settings: `.zed/settings.json` and `.zed/tasks.json` in the respective repo, added **manually** if needed. The package never touches repos or agent dotfiles.
 
-## Was das Installer-Skript ersetzt
+## What the installer script replaces
 
-Es schreibt ausschließlich diese Dateien (falls Änderungen nötig sind):
+It writes only these files (if changes are needed):
 
 ```text
 ~/.config/zed/settings.json
@@ -34,7 +34,7 @@ Es schreibt ausschließlich diese Dateien (falls Änderungen nötig sind):
 ~/.local/bin/zed-dev
 ```
 
-Vorherige Dateien werden in einem privaten Transaktionsbackup gesichert. Eigene andere Tasks und nicht adressierte `settings`-Schlüssel bleiben erhalten. Es wird **keine** `.zshrc`, kein git config, kein `~/.claude`, `~/.codex`, `~/.pi`, keine systemd-Unit und keine Shell-/Kitty-Konfiguration überschrieben.
+Previous files are secured in a private transactional backup. Your own other tasks and unaddressed `settings` keys are preserved. **No** `.zshrc`, no git config, no `~/.claude`, `~/.codex`, `~/.pi`, no systemd unit, and no shell/Kitty configuration is overwritten.
 
 ## Delta (optional, v1.1)
 

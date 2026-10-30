@@ -9,7 +9,6 @@ Usage:
   zed-dev agent claude|codex|yolo-working|yolo-private
   zed-dev web dev|build|lint|typecheck|test|format-check
   zed-dev defold build|bundle-html5|bundle-linux
-  zed-dev delta open
 
 The agent commands use your existing interactive zsh startup configuration.
 The web commands run existing project package.json scripts; no dependencies are installed.
@@ -30,13 +29,6 @@ if [[ "$kind" == web || "$kind" == defold ]] && [[ ${ZED_DEVKIT_SHELL_READY:-0} 
 fi
 
 case "$kind" in
-  delta)
-    [[ $# -eq 2 && "$action" == "open" ]] || fail 'Use: zed-dev delta open'
-    command -v delta >/dev/null 2>&1 || fail 'Delta not found. See docs/DELTA.md (optional install).'
-    # Delta by Zed Industries is distinct from git-delta, the Git diff pager.
-    [[ -d "$HOME/.local/delta.app" ]] || fail 'Official Delta app not found in ~/.local/delta.app (possible git-delta name collision). See docs/DELTA.md.'
-    exec delta open
-    ;;
   agent)
     [[ $# -eq 2 ]] || fail 'No extra arguments accepted for agent launchers'
     case "$action" in

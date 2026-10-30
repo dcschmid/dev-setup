@@ -15,12 +15,3 @@
 - Defold Lua versions: https://defold.com/llms/manuals/lua/
 
 The extensions named in `settings.json` are only loaded online from the Zed extension registry at Zed startup. They and their language servers are not included in the ZIP. No foreign binaries or font files are redistributed.
-
-- Delta download/install for Linux: https://delta.dev/docs/installation
-- Delta Quickstart: https://delta.dev/docs/getting-started
-- Delta CLI/Updates: https://delta.dev/docs/cli/get-started
-- Claude Code Plugin/Manual Sync: https://delta.dev/docs/cli/claude-code
-- Models: ChatGPT login and compatible providers: https://delta.dev/docs/agents/models-and-providers
-- Delta pricing: https://delta.dev/pricing
-- Delta Roadmap/ACP/Pi: https://delta.dev/roadmap
-- Delta Public Beta Zed Announcement: https://zed.dev/blog/delta-public-beta

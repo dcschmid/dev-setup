@@ -1,29 +1,14 @@
-# Zed Framework Devkit 1.1.0
+# Zed Framework Devkit 1.0.0
 
 **Fedora 44 / Framework Laptop 16 · Astro · Next.js/React · TypeScript · Defold/Lua · Claude Code · Codex · YOLO-Auto**
 
 A deliberately small and safe Zed setup for everyday development. The package **configures the editor** instead of building a second toolchain or a second agent stack alongside your existing setup. It is **not a full offline installer for Zed or extensions**.
 
-## New in 1.1: Delta as an optional add-on
-
-[**Delta**](https://delta.dev/) is a **separate app from the Zed makers** for agent threads, review, and tracing changes with DeltaDB. It is **not** a Zed extension and is **not** installed automatically with Zed. The new Zed task **Delta · Open collaboration app (optional)** launches the app after a separate installation.
-
-Important for your agents: Delta offers an official Claude Code plugin integration, but currently no confirmed Codex CLI or YOLO-Auto/OMP session synchronization. Delta can run in its own agent harness with a ChatGPT Plus/Pro login and its own API keys. **Claude subscriptions are not automatically a login for the native Delta agent.** There is a free Personal tier; hosted models can incur costs.
-
-The Devkit installs **no Claude plugins** and enables **no automatic repository sync**. When using the Delta plugin, depending on your selection, uncommitted files as well as conversation and tool contents are synchronized to DeltaDB. Work repositories: check approvals/data protection first and start with manual private sessions. Guide: [docs/DELTA.md](docs/DELTA.md).
-
-Install optionally, without touching the existing setup:
-
-```bash
-./scripts/install-delta.sh --dry-run
-./scripts/install-delta.sh --install
-```
-
 ## Quick install
 
 ```bash
-unzip zed-framework-devkit-v1.1.0.zip
-cd zed-framework-devkit-v1.1.0
+unzip zed-framework-devkit-v1.0.0.zip
+cd zed-framework-devkit-v1.0.0
 ./install.sh --dry-run            # Check what would be written
 ./install.sh --install-zed        # Installs Zed Stable if zed is still missing, plus the Devkit configuration
 ./scripts/check.sh                # Diagnostics
@@ -65,8 +50,6 @@ No system-wide Node modules, no Ollama, no duplication of TinySearch/TinyContext
 4. Via `agent: new thread`, select an ACP agent (Claude/Codex), **or** open a terminal thread for your usual CLI tools. For YOLO working/private, use the corresponding Zed tasks.
 5. For Riff Racers, open `game.project` as the project; edit Defold scripts via the Defold extension. Build normally in the **Defold editor** or optionally via Bob tasks.
 
-Additionally, there is the optional task **Delta · Open collaboration app**, which exclusively opens the separately installed Delta app.
-
 The Web tasks install **no packages**. They look for `package.json`, choose npm, pnpm, yarn, or bun based on `packageManager`/lockfile, and run **only existing scripts**. In monorepos, the `package.json` closest to the active file is used where possible. If your monorepo needs its own orchestrator, adjust the local task in the repo.
 
 ## Sign-in and extensions
@@ -102,4 +85,4 @@ Please adjust this example path to your existing installation. Alternatively, pr
 
 **Note on existing Zed configs:** `settings.json` and `tasks.json` are read as JSONC (comments and trailing commas supported), **merged** with the desired recommendations, and written as regular JSON. Custom keys and other tasks are preserved, but **comments/original formatting are lost in the new file**. The unchanged original is in the backup. If your Zed configuration is managed via symlinks/dotfiles, the installer deliberately aborts: then transfer the bundled settings manually into the central dotfiles repo.
 
-Further notes: [docs/DELTA.md](docs/DELTA.md), [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/SOURCES.md](docs/SOURCES.md).
+Further notes: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/SOURCES.md](docs/SOURCES.md).

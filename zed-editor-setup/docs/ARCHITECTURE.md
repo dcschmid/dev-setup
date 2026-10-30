@@ -35,7 +35,3 @@ It writes only these files (if changes are needed):
 ```
 
 Previous files are secured in a private transactional backup. Your own other tasks and unaddressed `settings` keys are preserved. **No** `.zshrc`, no git config, no `~/.claude`, `~/.codex`, `~/.pi`, no systemd unit, and no shell/Kitty configuration is overwritten.
-
-## Delta (optional, v1.1)
-
-Delta by Zed Industries is a separate public-beta application. Do not confuse it with the `git-delta` Git pager, and do not represent it as a Zed ACP extension. We only add a Zed task that launches an existing Delta installation and a separate opt-in installer. The Claude Code plugin and repository syncing are entirely opt-in and not installed by this package. Codex and OMP integrations remain separate.

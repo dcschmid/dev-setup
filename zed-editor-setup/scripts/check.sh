@@ -39,13 +39,4 @@ if command -v java >/dev/null 2>&1; then
   echo "Java: $(java -version 2>&1 | head -1)"
 fi
 if [[ -n ${BOB_JAR:-} ]]; then echo "BOB_JAR: $BOB_JAR"; fi
-printf '\nOptional Delta integration:\n'
-if [[ -d "$HOME/.local/delta.app" ]]; then
-  echo '[OK] Delta desktop app installed'
-else
-  echo '[--] Delta not installed (optional; see docs/DELTA.md)'
-fi
-if command -v delta >/dev/null 2>&1; then
-  echo "Delta CLI PATH: $(command -v delta) (verify this is Delta by Zed, not git-delta)"
-fi
 echo 'Zed requires Vulkan 1.3 and working desktop portals: see docs/TROUBLESHOOTING.md'

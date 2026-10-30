@@ -6,7 +6,7 @@ Personal, locally run development setup for a **Framework Laptop 16 on Fedora 44
 |---|---|
 | [`frontend-ai-optimized-stack/`](frontend-ai-optimized-stack/) | Three coding agents (Claude Code, Codex CLI, YOLO-Auto via Oh My Pi) as **working** and **private** profiles, with shared TinySearch/TinyContext and a private Blender MCP. |
 | [`kitty-terminal-setup/`](kitty-terminal-setup/) | A lean Kitty/Zsh workspace: Catppuccin Mocha, Powerline tabs, persistent session state with rotating backups, and a curated toolset (fzf, zoxide, direnv, Atuin, eza, bat, delta, lazygit). |
-| [`zed-editor-setup/`](zed-editor-setup/) | A small, safe Zed editor configuration for Astro/Next.js/TypeScript/Defold, with ACP/terminal agent tasks and an optional Delta add-on. |
+| [`zed-editor-setup/`](zed-editor-setup/) | A small, safe Zed editor configuration for Astro/Next.js/TypeScript/Defold, with ACP/terminal agent tasks. |
 
 ## Layout
 

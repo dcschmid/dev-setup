@@ -1,12 +1,5 @@
 # Changelog
 
-## 1.1.0 — 2026-10-30
-
-- Delta by Zed Industries integrated as an **optional** second application.
-- 14th Zed task to open Delta, without new account/agent configuration.
-- Separate, deliberately opt-in install/update script and Delta guide.
-- Claude Code Delta plugin only as a documented manual option; no uploads/auto-sync by the installer.
-
 ## 1.0.0 — 2026-10-30
 
 - Zed setup for Fedora 44 / Framework 16 with Catppuccin Mocha dark theming.

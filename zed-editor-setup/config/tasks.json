@@ -137,15 +137,5 @@
     ],
     "use_new_terminal": true,
     "reveal": "always"
-  },
-  {
-    "label": "Delta · Open collaboration app (optional)",
-    "command": "$HOME/.local/bin/zed-dev",
-    "args": [
-      "delta",
-      "open"
-    ],
-    "use_new_terminal": true,
-    "reveal": "never"
   }
 ]

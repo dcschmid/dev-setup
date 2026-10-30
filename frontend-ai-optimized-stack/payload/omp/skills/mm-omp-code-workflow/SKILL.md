@@ -1,6 +1,6 @@
 ---
 name: mm-omp-code-workflow
-description: OMP-only guide for YOLO-Auto coding: native LSP, tasks, worktrees, safe extensions and shared TinyContext project memory.
+description: "OMP-only guide for YOLO-Auto coding: native LSP, tasks, worktrees, safe extensions and shared TinyContext project memory."
 ---
 # Efficient OMP coding workflow (Working / Private)
 

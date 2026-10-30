@@ -1,4 +1,27 @@
-# Frontend AI Optimized Stack v3.13.4 — Fedora 44 · Manual Codex · YOLO-Auto OMP Profiles
+# Frontend AI Optimized Stack v3.14.0 — Fedora 44 · Manual Codex · YOLO-Auto OMP Profiles
+
+## Maintenance and profile policy (v3.14.0)
+
+- OMP settings survive the client's YAML save cycle; existing per-profile browser/computer choices are retained. Python needs PyYAML (`python3-pyyaml` on Fedora).
+- Profile rules are delivered through Codex `AGENTS.md` and appended Claude/OMP system prompts. User and repository instructions take precedence.
+- Working Codex uses an independent config with only the common MCPs inherited at migration. Its login remains separate. Working Claude uses common global MCPs plus project registrations, excluding known Private integrations. Add additional Working-only Codex MCPs to its own config explicitly.
+- Shared skills now include CI triage, PR/MR review follow-up and Playwright browser automation. The general game-engineering skill incorporates the former gamedev-core workflow.
+- `mm-skill-audit --strict --plugins --profile both` validates YAML metadata, installed asset drift and symlinked skills. Plugin cache files are labeled separately from active capabilities.
+- `mm-project-memory-doctor` verifies Claude, the selected Codex home and OMP against the shared profile/project memory launcher.
+
+```bash
+./install-profiles.sh
+./verify-profiles.sh
+./setup-workflow-tools.py --install  # optional verified gh/glab/ShellCheck + Playwright CLI/Firefox
+./install-working-upstream-skills.sh --only vercel
+mm-skill-audit --profile both --plugins --strict
+```
+
+The optional tool installer uses pinned, SHA256-verified Linux x86_64 binaries for the forge/lint CLIs and a pinned npm Playwright CLI. It preserves existing forge CLIs and logins; authenticate with the intended GitHub/GitLab account when remote work needs it. Fedora uses Playwright's fallback browser build, so validate it on the actual machine. `mm-playwright` selects Firefox and separates sessions by profile/directory.
+
+`mm-stack-update` refreshes only Vercel Working skills by default. Choose `--memory` and `--plugins` separately. Raw Figma skills require explicit selection and duplicate-plugin review. Upstream revisions and previous skill directories are recorded under the canonical stack's `upstream/` directory. Optional upstream skills survive subsequent stack installations.
+
+See the repository's [setup review](../SETUP-REVIEW-2026-10-30.md) for the original findings and implementation status.
 
 **Target:** Framework Laptop 16 / Fedora Workstation, with three separate coding agents:
 

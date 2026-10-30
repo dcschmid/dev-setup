@@ -1,4 +1,5 @@
 # Working profile rules
+- Explicit user requests and repository/company requirements outrank these package fallbacks. Respect existing authorization without requesting it again for the same in-scope work.
 - OMP is YOLO-Auto only. Do not route OMP planning, execution, review, or fallback work to Codex or Claude.
 - Codex CLI and Claude Code are independent clients; they use their own wrappers and credentials.
 - Workspace/repository instructions, skills, component conventions, and project-local tooling always outrank package fallbacks.

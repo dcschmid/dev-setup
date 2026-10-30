@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -u
-printf 'Frontend AI Stack v3.13.0 · Fedora / Direct CLI\n\n'
+printf 'Frontend AI Stack v3.14.0 · Fedora / Direct CLI\n\n'
 for c in python3 git node uv uvx npx codex claude cswap omp mm-profile-skills-sync mm-tinycontext-mcp; do
   if command -v "$c" >/dev/null 2>&1; then printf 'PASS  %-26s %s\n' "$c" "$(command -v "$c")";
   else printf 'INFO  %-26s %s\n' "$c" 'not available yet'; fi

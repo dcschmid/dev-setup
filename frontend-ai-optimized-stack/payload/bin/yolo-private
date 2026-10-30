@@ -4,4 +4,6 @@ command -v omp >/dev/null || { echo 'ERROR: omp missing. Install from https://om
 export MM_AGENT_PROFILE=private
 export OMP_PROFILE=private
 export MM_TINYCONTEXT_PROJECT_ROOT="${MM_TINYCONTEXT_PROJECT_ROOT:-$PWD}"
-exec omp --profile private "$@"
+mm-profile-skills-sync omp private --quiet
+RULES="$(mm-profile-runtime prompt private)"
+exec omp --profile private --append-system-prompt "$RULES" "$@"

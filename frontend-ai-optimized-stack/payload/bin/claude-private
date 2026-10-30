@@ -16,4 +16,5 @@ if command -v cswap >/dev/null 2>&1; then
 fi
 MCP_JSON="${MM_STACK_DATA_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/frontend-ai-stack}/mcp/private-blender.json"
 [[ -f "$MCP_JSON" ]] || { echo 'claude-private: Blender config missing; run ./setup-global-mcps.sh' >&2; exit 1; }
-exec claude --mcp-config "$MCP_JSON" "$@"
+RULES="$(mm-profile-runtime prompt private)"
+exec claude --append-system-prompt "$RULES" --mcp-config "$MCP_JSON" "$@"

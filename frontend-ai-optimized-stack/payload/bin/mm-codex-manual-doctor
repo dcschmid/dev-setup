@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -u
-printf 'Codex manual authentication · Frontend Stack v3.13.0\n'
+printf 'Codex manual authentication · Frontend Stack v3.14.0\n'
 command -v codex >/dev/null && echo 'PASS  Codex CLI installed' || echo 'WARN  Codex CLI missing'
 for name in codex-working codex-private; do
   path="$HOME/.local/bin/$name"

@@ -1,0 +1,5 @@
+{
+  "source": "https://github.com/openai/skills/tree/49f948faa9258a0c61caceaf225e179651397431/skills/.curated/playwright",
+  "commit": "49f948faa9258a0c61caceaf225e179651397431",
+  "adaptations": ["Pinned stack launcher", "Firefox default", "Project/profile session separation", "Existing repository tests and authorization take precedence"]
+}

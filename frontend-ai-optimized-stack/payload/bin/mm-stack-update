@@ -1,75 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
-STACK_ROOT="${MM_STACK_DATA_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/frontend-ai-stack}"
-mkdir -p "$STACK_ROOT/upstream" "$STACK_ROOT/skills/working"
-
-echo '== TinyContext =='
-if command -v tinycontext-doctor >/dev/null 2>&1; then tinycontext-doctor --update; else echo 'WARN: tinycontext-doctor missing'; fi
-
-echo
-echo '== Working upstream skills =='
-if command -v git >/dev/null 2>&1; then
-  tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
-  if git clone --depth 1 -q https://github.com/vercel-labs/agent-skills.git "$tmp/vercel"; then
-    for s in react-best-practices composition-patterns; do
-      [[ -d "$tmp/vercel/skills/$s" ]] || continue
-      rm -rf "$STACK_ROOT/skills/working/$s"
-      cp -a "$tmp/vercel/skills/$s" "$STACK_ROOT/skills/working/"
-    done
-    git -C "$tmp/vercel" rev-parse HEAD > "$STACK_ROOT/upstream/vercel-agent-skills.commit"
-    echo 'PASS: Vercel React/composition skills refreshed.'
-  else
-    echo 'WARN: Vercel Agent Skills refresh failed.'
-  fi
-
-  if git clone --depth 1 -q https://github.com/figma/mcp-server-guide.git "$tmp/figma"; then
-    for s in figma-use figma-design-to-code figma-code-connect; do
-      [[ -d "$tmp/figma/skills/$s" ]] || continue
-      rm -rf "$STACK_ROOT/skills/working/$s"
-      cp -a "$tmp/figma/skills/$s" "$STACK_ROOT/skills/working/"
-    done
-    git -C "$tmp/figma" rev-parse HEAD > "$STACK_ROOT/upstream/figma-mcp-server-guide.commit"
-    echo 'PASS: Figma figma-use + design-to-code + Code Connect skills refreshed.'
-  else
-    echo 'WARN: Figma MCP skills refresh failed.'
-  fi
-else
-  echo 'WARN: git unavailable; upstream skills not refreshed.'
-fi
-
-echo
-echo '== GitHub MCP major update advisory =='
-echo 'INFO: GitHub MCP Server v2.0.3 is available upstream (2026-10-21).'
-echo 'INFO: Previous stack pin v1.14.0 is NOT auto-upgraded across a major version.'
-echo 'INFO: See docs/UPDATES_OMP_SKILLS_2026-10-29.md for compatibility checks.'
-
-echo
-echo '== Ponytail native plugins =='
-# Update only if Ponytail is already installed. Installation remains an explicit
-# setup step so stack rollback never needs to guess prior third-party plugin state.
-if command -v codex >/dev/null 2>&1 && codex plugin list 2>/dev/null | grep -qi ponytail; then
-  codex plugin marketplace upgrade ponytail >/dev/null 2>&1 || echo 'WARN: Codex Ponytail marketplace refresh failed.'
-  codex plugin add ponytail@ponytail >/dev/null 2>&1 || echo 'WARN: Codex Ponytail reinstall/update failed.'
-fi
-if command -v claude >/dev/null 2>&1 && claude plugin list 2>/dev/null | grep -qi ponytail; then
-  claude plugin marketplace update ponytail >/dev/null 2>&1 || echo 'WARN: Claude Ponytail marketplace refresh failed.'
-  claude plugin update ponytail@ponytail --scope user >/dev/null 2>&1 || echo 'WARN: Claude Ponytail update failed.'
-fi
-
-# Optional Anthropic maintenance plugin: update only if the user explicitly installed it.
-if command -v claude >/dev/null 2>&1 && claude plugin list 2>/dev/null | grep -qi 'skill-creator'; then
-  claude plugin marketplace update claude-plugins-official >/dev/null 2>&1 || echo 'WARN: Claude official marketplace refresh failed.'
-  claude plugin update skill-creator@claude-plugins-official --scope user >/dev/null 2>&1 || echo 'WARN: Claude skill-creator update failed.'
-fi
-
-echo
-echo 'Package fallbacks were updated. Workspace/repo skills will still override them on the next wrapper launch.'
-echo 'Run mm-skill-audit afterwards to review the refreshed skill set.'
-
-echo
-echo 'Pinned integration versions are intentionally not auto-bumped by this command.'
-echo 'Run mm-stack-audit and upgrade through a tested stack release before changing Playwright/GitHub/Blender pins.'
-
-
-echo
-echo 'INFO: YOLO-Auto/OMP named profiles are managed separately by ./setup-yolo-omp.sh.'
+# Independent lanes keep skill refreshes separate from memory/plugin updates.
+if [[ $# -eq 0 ]]; then set -- --skills; fi
+for lane in "$@"; do
+  case "$lane" in
+    --skills) mm-refresh-skills --only vercel ;;
+    --memory) tinycontext-doctor --update ;;
+    --plugins)
+      if command -v claude >/dev/null 2>&1 && claude plugin list 2>/dev/null | grep -qi skill-creator; then
+        claude plugin marketplace update claude-plugins-official
+        claude plugin update skill-creator@claude-plugins-official --scope user
+      fi
+      ;;
+    --help|-h) echo 'Usage: mm-stack-update [--skills] [--memory] [--plugins]'; exit 0 ;;
+    *) echo "Unknown lane: $lane" >&2; exit 2 ;;
+  esac
+ done
+ echo 'PASS  Requested update lanes completed. Run mm-skill-audit --strict.'

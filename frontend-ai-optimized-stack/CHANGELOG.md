@@ -1,3 +1,15 @@
+# Changelog
+
+## v3.14.0 — Profile policy and maintenance repair (2026-10-30)
+
+- Recognize OMP's serialized YAML semantically; keep browser/computer toggles and unrelated settings, reject conflicting policies, and record managed policy metadata.
+- Deliver profile rules to Codex/Claude/OMP. Materialize an independent Working Codex config, limit inherited Working Claude MCPs, and remove only recognized missing Asset Forge commands.
+- Extend skill audits to real YAML, symlinks, OMP, installed drift and optional plugin-cache inspection; verify memory registrations for all three clients.
+- Consolidate upstream skill refresh with validation, staged publishing, recorded commits and recoverable previous versions. Preserve optional upstream skills through stack upgrades.
+- Add focused CI/review skills, adapt the official Playwright skill for pinned Firefox automation and consolidate general game-development guidance.
+- Provide optional verified gh/glab/ShellCheck installers and a pinned Playwright CLI; detect the Zed Delta/Git Delta name collision in shell diagnostics.
+- Add offline regression coverage and a read-only CI workflow; refresh package checksum manifests.
+
 ## v3.13.4 — OMP launcher aliases / Zed Delta removal (2026-10-30)
 
 - Bring back `omp-working` and `omp-private` as managed entrypoints; keep `yolo-*` aliases.
@@ -6,7 +18,6 @@
 - Add a read-only scan / health check and a targeted standalone removal command.
 - Preserve all existing Claude/Codex logins, profile skills, TinyContext and Private Blender MCP.
 
-# Changelog
 
 ## v3.13.3 — OMP CLI Auto-Install Hotfix (2026-10-30)
 

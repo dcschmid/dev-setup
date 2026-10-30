@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only verification that Claude and Codex use the same project-memory launcher."""
+"""Read-only verification that Claude, Codex and OMP use the same project-memory launcher."""
 import argparse
 import json
 import os
@@ -38,10 +38,17 @@ def main() -> int:
     except (OSError, ValueError, AttributeError):
         nodes['Claude Code'] = None
     try:
-        cfg = tomllib.loads((home / '.codex/config.toml').read_text())
+        stack = Path(os.getenv('MM_STACK_DATA_HOME', str(Path(os.getenv('XDG_DATA_HOME', str(home / '.local/share'))) / 'frontend-ai-stack')))
+        codex_home = Path(os.getenv('MM_CODEX_WORKING_HOME', str(stack / 'codex-working-home'))) if args.profile == 'working' else home / '.codex'
+        cfg = tomllib.loads((codex_home / 'config.toml').read_text())
         nodes['Codex CLI'] = cfg.get('mcp_servers', {}).get('mm-tinycontext')
     except (OSError, ValueError, AttributeError):
         nodes['Codex CLI'] = None
+    try:
+        cfg = json.loads((home / f'.omp/profiles/{args.profile}/agent/mcp.json').read_text())
+        nodes['OMP'] = cfg.get('mcpServers', {}).get('mm-tinycontext')
+    except (OSError, ValueError, AttributeError):
+        nodes['OMP'] = None
     success = True
     for name, node in nodes.items():
         if isinstance(node, dict) and node.get('command') == str(launcher) and node.get('args', []) == [] and not node.get('env'):
@@ -50,7 +57,7 @@ def main() -> int:
             print(f'FAIL  {name} does not use the expected shared MCP launcher')
             success = False
     if success:
-        print('PASS  Both agents select the same SQLite file for this project/profile')
+        print('PASS  All three agents select the same SQLite file for this project/profile')
     else:
         print('TIP   Run ./setup-global-mcps.sh and check for conflicting MCP entries')
     print('INFO  Stored project decisions are shared; full chat transcripts are not automatically synchronized.')

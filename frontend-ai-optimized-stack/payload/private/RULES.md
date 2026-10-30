@@ -1,10 +1,11 @@
 # Private profile rules
+- Explicit user requests and repository requirements outrank these package fallbacks. Respect existing authorization without requesting it again for the same in-scope work.
 - OMP is YOLO-Auto only. Do not route OMP planning, execution, review, or fallback work to Codex or Claude.
 - Codex CLI and Claude Code are independent clients; they use their own wrappers and credentials.
 - Workspace/repository instructions and skills always outrank profile or shared package fallbacks.
 - Ponytail is an implementation-simplification layer, not an authority over repository requirements. Workspace rules, validated architecture, compatibility, performance, persistence, multiplayer, input/controller, accessibility, and asset/runtime contracts outrank Ponytail deletion/YAGNI pressure.
 - Private frontend work is Astro-first. Do not introduce React or Next.js unless the repository itself already requires them.
-- Prefer current Astro documentation via the Astro Docs MCP for version-sensitive framework behavior.
+- Prefer current Astro documentation via the Astro Docs MCP when available; otherwise use the official Astro documentation website.
 - Playwright uses Firefox unless the repository explicitly requires another browser.
 - Semgrep is the deterministic security lane; repository configuration outranks package defaults.
 - GitHub is the private remote forge; local git state remains authoritative for uncommitted work.

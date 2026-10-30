@@ -1,0 +1,40 @@
+name: Validate development setup
+
+on: [push, pull_request, workflow_dispatch]
+
+permissions:
+  contents: read
+
+jobs:
+  offline-checks:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - run: sudo apt-get update && sudo apt-get install -y python3-yaml shellcheck
+      - run: python -m pip install PyYAML==6.0.3
+      - name: Unit tests
+        run: |
+          python3 kitty-terminal-setup/tests.py
+          python3 -m unittest discover -s zed-editor-setup/tests
+          python3 -m unittest discover -s frontend-ai-optimized-stack/tests -p 'test_*.py'
+      - name: Offline profile and migration smoke tests
+        run: |
+          for test_script in frontend-ai-optimized-stack/tests/*smoke.sh; do
+            bash "$test_script"
+          done
+      - name: Release manifests
+        run: |
+          (cd frontend-ai-optimized-stack && sha256sum --quiet -c SHA256SUMS.txt)
+          (cd kitty-terminal-setup && sha256sum --quiet -c SHA256SUMS.txt)
+      - name: Shell entrypoints
+        run: |
+          shellcheck -S warning frontend-ai-optimized-stack/install-profiles.sh \
+            frontend-ai-optimized-stack/rollback-profiles.sh \
+            frontend-ai-optimized-stack/install-working-upstream-skills.sh \
+            frontend-ai-optimized-stack/payload/bin/{codex-*,claude-*,yolo-*,omp-*,mm-playwright,mm-stack-update} \
+            kitty-terminal-setup/shell-doctor.sh

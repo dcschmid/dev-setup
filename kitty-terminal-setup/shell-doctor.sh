@@ -92,6 +92,13 @@ printf '\n[3] CLI-Tools — empfohlen\n'
 for c in git fzf zoxide direnv rg fd atuin eza bat delta git-worktree-helper; do
   installed "$c" && ok "$c" || warn "$c fehlt"
 done
+if installed delta; then
+  if delta --color-only </dev/null >/dev/null 2>&1; then
+    ok 'delta ist ein funktionsfähiger Git-Diff-Filter'
+  else
+    fail "delta ist kein Git-Diff-Filter: $(command -v delta) (mögliche Zed-Delta-Kollision)"
+  fi
+fi
 printf '\n[4] Optionale Werkzeuge — kein Fehler\n'
 for c in lazygit conda uv cargo rustup lemonade omp codex claude; do
   installed "$c" && note "$c vorhanden" || note "$c nicht installiert (optional)"

@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 set -u
-printf 'Frontend AI Stack v3.13.1 quick audit\n'
+printf 'Frontend AI Stack v3.14.0 quick audit\n'
 for c in claude codex cswap omp uvx npx python3; do
   if command -v "$c" >/dev/null 2>&1; then printf 'PASS  %-24s %s\n' "$c" "$(command -v "$c")";
   else printf 'INFO  %-24s %s\n' "$c" 'not found'; fi
 done
 printf '\nSystem: '; grep -m1 PRETTY_NAME /etc/os-release 2>/dev/null || uname -s
-for unit in claude-swap-auto; do
-  if command -v systemctl >/dev/null 2>&1 && systemctl --user is-active --quiet "$unit.service"; then
-    echo "PASS  $unit.service active"
-  else echo "INFO  $unit.service not active"; fi
-done
+if command -v systemctl >/dev/null 2>&1 && systemctl --user is-active --quiet claude-swap-auto.service; then
+  echo 'PASS  claude-swap-auto.service active'
+else echo 'INFO  claude-swap-auto.service not active'; fi

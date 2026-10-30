@@ -37,6 +37,26 @@ grep -A1 '^browser:' "$w" | grep -q 'enabled: false'
 grep -A1 '^browser:' "$p" | grep -q 'enabled: true'
 [[ "$(grep -c '^lsp:' "$w")" == 1 ]]
 grep -q 'TOKEN_DO_NOT_TOUCH' "$HOME/.omp/profiles/private/agent/secret.json"
+# OMP saves parsed YAML and discards comments. Checks/upgrades must survive that
+# round trip without changing the user's per-profile choices or unrelated keys.
+python3 - "$ROOT" "$w" "$p" <<'PYROUNDTRIP'
+from pathlib import Path
+import runpy, sys, yaml
+loader = runpy.run_path(str(Path(sys.argv[1]) / 'scripts/configure_omp_features.py'))['ConfigLoader']
+for name in sys.argv[2:]:
+    path = Path(name)
+    data = yaml.load(path.read_text(), Loader=loader)
+    data['symbolPreset'] = 'nerd'
+    path.write_text(yaml.safe_dump(data, sort_keys=False))
+PYROUNDTRIP
+before="$(sha256sum "$w" "$p")"
+"$ROOT/setup-omp-features.sh" --check > /dev/null
+"$ROOT/setup-omp-features.sh" > /dev/null
+[[ "$(sha256sum "$w" "$p")" == "$before" ]]
+"$ROOT/setup-omp-features.sh" --profile working --browser on >/dev/null
+"$ROOT/setup-omp-features.sh" --check >/dev/null
+grep -q '^symbolPreset: nerd' "$w"
+grep -A1 '^computer:' "$p" | grep -q 'enabled: true'
 # Own settings collisions must not be overwritten.
 printf 'browser:\n  enabled: true\n' >> "$w"
 if "$ROOT/setup-omp-features.sh" --preflight >/dev/null 2>&1; then echo 'collision not rejected'; exit 1; fi

@@ -52,8 +52,13 @@ for name in items:
         p.unlink()
 PYS
   fi
-  for name in config.yml mcp.json .mm-yolo-skill-links.json; do
+  for name in config.yml mcp.json .mm-yolo-skill-links.json .mm-omp-features.json; do
     restore "$agent/$name" "yolo/$profile/$name"
+  done
+  for name in .mm-managed-package-links-v392.json .mm-active-profile; do
+    if [[ -e "$BACKUP/state/yolo/$profile/skills/$name" || -e "$BACKUP/state/yolo/$profile/skills/$name.__MISSING__" ]]; then
+      restore "$agent/skills/$name" "yolo/$profile/skills/$name"
+    fi
   done
   mkdir -p "$agent/skills"
   for old in "$BACKUP/yolo-links/$profile/"*; do
@@ -66,6 +71,13 @@ restore "$STACK_ROOT/skills" stack-skills
 restore "$STACK_ROOT/mcp/private-blender.json" stack-private-blender
 restore "$HOME/.codex/config.toml" codex-config
 restore "$HOME/.claude.json" claude-config
+if [[ -e "$BACKUP/state/stack-rules" || -e "$BACKUP/state/stack-rules.__MISSING__" ]]; then
+  restore "$STACK_ROOT/rules" stack-rules
+  restore "$STACK_ROOT/source-root" stack-source-root
+  restore "$HOME/.codex/AGENTS.md" codex-rules
+  restore "${MM_CODEX_WORKING_HOME:-$STACK_ROOT/codex-working-home}/config.toml" working-config
+  restore "${MM_CODEX_WORKING_HOME:-$STACK_ROOT/codex-working-home}/AGENTS.md" working-rules
+fi
 for client in codex claude; do
   dir="$HOME/.$client/skills"; mkdir -p "$dir"
   for f in .mm-managed-package-links-v392.json .mm-managed-profile-links .mm-active-profile; do
@@ -105,5 +117,5 @@ for b in "$BACKUP/state/bin/"*; do
   name="$(basename "$b")"; name="${name%.__MISSING__}"
   restore "$HOME/.local/bin/$name" "bin/$name"
 done
-echo "PASS: v3.13.4 installer rollback restored from $BACKUP"
+echo "PASS: v3.14.0 installer rollback restored from $BACKUP"
 echo 'Note: this rollback does not restore Zed Delta or its plugin automatically (see docs/ZED_DELTA_REMOVAL.md), modify logins, remove OMP, or undo the optional ~/.zshrc PATH snippet.'

@@ -1,0 +1,202 @@
+#!/usr/bin/env python3
+"""Deliver profile rules and isolate Working MCP configuration. No credentials."""
+import argparse
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import tempfile
+import tomllib
+
+HOME = Path.home()
+STACK = Path(os.getenv('MM_STACK_DATA_HOME', str(Path(os.getenv('XDG_DATA_HOME', str(HOME / '.local/share'))) / 'frontend-ai-stack')))
+WORK = Path(os.getenv('MM_CODEX_WORKING_HOME', str(STACK / 'codex-working-home')))
+ALLOWED = {'tinysearch', 'mm-tinycontext'}
+PRIVATE = {'blender', 'riff-asset-forge', 'riff-asset-forge-clean'}
+BEGIN = '<!-- BEGIN FRONTEND-AI-STACK PROFILE -->'
+END = '<!-- END FRONTEND-AI-STACK PROFILE -->'
+
+
+def write(path, content):
+    if not path.is_symlink() and path.exists() and path.read_text() == content:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(prefix='.mm-profile-', dir=path.parent)
+    try:
+        with os.fdopen(fd, 'w') as stream:
+            stream.write(content)
+        os.chmod(tmp, 0o600)
+        os.replace(tmp, path)
+    finally:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+
+
+def rules(profile):
+    return (STACK / 'rules' / f'{profile}.md').read_text().strip()
+
+
+def without_servers(text, names):
+    """Preserve all non-MCP TOML bytes, including quoted server/table names."""
+    parsed = tomllib.loads(text)
+    if not (set(parsed.get('mcp_servers', {})) & names):
+        return text
+    headers = list(re.finditer(r'^\s*\[.+?\]\s*(?:#.*)?$', text, re.M))
+    removed = set()
+    for i in reversed(range(len(headers))):
+        header = headers[i]
+        try:
+            table = tomllib.loads(header.group(0)).get('mcp_servers', {})
+        except tomllib.TOMLDecodeError:
+            continue
+        if set(table) & names:
+            removed.update(set(table) & names)
+            end = headers[i + 1].start() if i + 1 < len(headers) else len(text)
+            text = text[:header.start()] + text[end:]
+    if names & set(tomllib.loads(text).get('mcp_servers', {})):
+        raise ValueError('inline MCP configuration requires manual migration; left untouched')
+    return text
+
+
+def prepare_codex(profile):
+    root = WORK if profile == 'working' else Path(os.getenv('CODEX_HOME', str(HOME / '.codex')))
+    config = root / 'config.toml'
+    if profile == 'working':
+        root.mkdir(parents=True, exist_ok=True)
+        root.chmod(0o700)
+        if config.is_symlink() or not config.exists():
+            source = config.resolve() if config.exists() else HOME / '.codex/config.toml'
+            content = source.read_text() if source.exists() else ''
+            parsed = tomllib.loads(content)
+            content = without_servers(content, set(parsed.get('mcp_servers', {})) - ALLOWED)
+            write(config, content)
+        # Working's independent file is explicitly editable by the user. Never
+        # refresh it from Private or silently remove their own Working servers.
+        registered = tomllib.loads(config.read_text()).get('mcp_servers', {})
+        if set(registered) & PRIVATE:
+            raise ValueError('private MCP registered in Working config; inspect it before launch')
+    path = root / 'AGENTS.md'
+    old = path.read_text() if path.exists() else ''
+    if old.count(BEGIN) > 1 or old.count(END) > 1 or ((BEGIN in old) != (END in old)):
+        raise ValueError('inconsistent managed AGENTS.md block; left untouched')
+    block = f'{BEGIN}\n{rules(profile)}\n{END}'
+    if BEGIN in old:
+        prefix, tail = old.split(BEGIN, 1)
+        _, suffix = tail.split(END, 1)
+        new = prefix + block + suffix
+    else:
+        new = old.rstrip() + ('\n\n' if old.strip() else '') + block + '\n'
+    write(path, new)
+
+
+def cleanup_stale():
+    """Only remove the exact missing project executables identified in the audit."""
+    codex = HOME / '.codex/config.toml'
+    claude = HOME / '.claude.json'
+    for path in (codex, claude):
+        if not path.exists():
+            continue
+        old = path.read_text()
+        obj = tomllib.loads(old) if path == codex else json.loads(old)
+        key = 'mcp_servers' if path == codex else 'mcpServers'
+        stale = set()
+        for name, node in obj.get(key, {}).items():
+            if name not in PRIVATE - {'blender'} or not isinstance(node, dict):
+                continue
+            cmd = node.get('command', '')
+            if isinstance(cmd, str) and '/riff-asset-forge' in cmd and cmd.startswith('/') and not Path(cmd).exists():
+                stale.add(name)
+        if stale:
+            if path == codex:
+                new = without_servers(old, stale)
+            else:
+                for name in stale:
+                    obj[key].pop(name)
+                new = json.dumps(obj, indent=2, ensure_ascii=False) + '\n'
+            write(path, new)
+            for name in sorted(stale):
+                print(f'PASS  Removed missing {name} registration from {path.name}')
+
+
+def working_claude_mcp():
+    # Only common global servers are inherited. Project-owned registrations are
+    # still available, but known Private integrations cannot cross the boundary.
+    config = HOME / '.claude.json'
+    obj = json.loads(config.read_text()) if config.exists() else {}
+    servers = {name: node for name, node in obj.get('mcpServers', {}).items() if name in ALLOWED}
+    cwd = Path.cwd().resolve()
+    result = subprocess.run(['git', 'rev-parse', '--show-toplevel'], capture_output=True, text=True)
+    root = Path(result.stdout.strip()) if result.returncode == 0 else cwd
+    ancestors = [cwd]
+    while ancestors[-1] != root and root in ancestors[-1].parents:
+        ancestors.append(ancestors[-1].parent)
+    for directory in reversed(ancestors):
+        project = obj.get('projects', {}).get(str(directory), {})
+        servers.update(project.get('mcpServers', {}))
+        path = directory / '.mcp.json'
+        if path.exists():
+            servers.update(json.loads(path.read_text()).get('mcpServers', {}))
+    for name, node in list(servers.items()):
+        encoded = json.dumps(node)
+        if name in PRIVATE or 'mcp-for-blender' in encoded or '/riff-asset-forge' in encoded:
+            servers.pop(name)
+    # Project-specific filename prevents two concurrent repositories overwriting
+    # each other's selected registrations. The contents may contain secrets.
+    import hashlib
+    key = hashlib.sha256(str(cwd).encode()).hexdigest()[:16]
+    target = STACK / 'mcp' / f'working-{key}.json'
+    write(target, json.dumps({'mcpServers': servers}, indent=2) + '\n')
+    return target
+
+
+def check():
+    for profile in ('private', 'working'):
+        text = rules(profile)
+        root = WORK if profile == 'working' else HOME / '.codex'
+        agents = root / 'AGENTS.md'
+        if text not in agents.read_text():
+            raise ValueError(f'{profile} Codex profile rules missing')
+        for client in ('claude', 'yolo'):
+            launcher = (HOME / '.local/bin' / f'{client}-{profile}').read_text()
+            if 'append-system-prompt' not in launcher or 'mm-profile-runtime' not in launcher:
+                raise ValueError(f'{client}/{profile} rule delivery missing')
+        print(f'PASS  {profile}: Codex AGENTS.md, Claude/OMP appended profile rules')
+    config = WORK / 'config.toml'
+    if config.is_symlink() or set(tomllib.loads(config.read_text()).get('mcp_servers', {})) & PRIVATE:
+        raise ValueError('Working Codex config is shared or contains Private MCPs')
+    if '--strict-mcp-config' not in (HOME / '.local/bin/claude-working').read_text():
+        raise ValueError('Working Claude global MCP boundary missing')
+    print('PASS  Working: independent Codex config and scoped Claude MCPs')
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('action', choices=['prepare', 'install', 'check', 'prompt', 'claude-mcp'])
+    parser.add_argument('client', nargs='?', choices=['codex', 'claude', 'omp', 'private', 'working'])
+    parser.add_argument('profile', nargs='?', choices=['private', 'working'])
+    args = parser.parse_args()
+    if args.action == 'install':
+        cleanup_stale()
+        for profile in ('private', 'working'):
+            prepare_codex(profile)
+    elif args.action == 'prepare' and args.client == 'codex' and args.profile:
+        prepare_codex(args.profile)
+    elif args.action == 'prompt' and args.client in ('private', 'working'):
+        print(rules(args.client))
+    elif args.action == 'claude-mcp':
+        print(working_claude_mcp())
+    elif args.action == 'check':
+        check()
+    else:
+        parser.error('expected prepare codex <profile> or prompt <profile>')
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except (OSError, ValueError, TypeError, KeyError) as exc:
+        # Do not print parser exceptions containing configuration snippets.
+        detail = str(exc) if type(exc) is ValueError else f'{type(exc).__name__}; inspect profile configuration'
+        print(f'FAIL  Profile runtime: {detail}', file=__import__('sys').stderr)
+        raise SystemExit(1)

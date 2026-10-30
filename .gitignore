@@ -6,3 +6,7 @@ secrets.zsh
 .DS_Store
 *.swp
 *~
+
+# Python validation artifacts
+__pycache__/
+*.pyc

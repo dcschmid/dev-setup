@@ -3,6 +3,7 @@ set -euo pipefail
 command -v codex >/dev/null || { echo 'ERROR: Codex CLI is not installed.' >&2; exit 127; }
 export MM_AGENT_PROFILE=private
 export MM_TINYCONTEXT_PROJECT_ROOT="${MM_TINYCONTEXT_PROJECT_ROOT:-$PWD}"
+mm-profile-runtime prepare codex private
 mm-profile-skills-sync codex private --quiet
 UVX="$(command -v uvx || true)"
 [[ -n "$UVX" ]] || { echo 'ERROR: uvx required for private Blender MCP.' >&2; exit 1; }

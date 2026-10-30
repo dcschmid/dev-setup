@@ -6,13 +6,15 @@ export MM_AGENT_PROFILE=working
 # an agent/subprocess later changes its working directory.
 export MM_TINYCONTEXT_PROJECT_ROOT="${MM_TINYCONTEXT_PROJECT_ROOT:-$PWD}"
 mm-profile-skills-sync claude working --quiet
+RULES="$(mm-profile-runtime prompt working)"
+MCP_JSON="$(mm-profile-runtime claude-mcp)"
 
 # Keep the company account out of the private default-login rotation. cswap run
 # starts it in an isolated session profile and mirrors the just-resolved Working
 # skills/MCP definitions at launch without changing the private default account.
 if command -v cswap >/dev/null 2>&1; then
   account="${MM_CLAUDE_WORK_ACCOUNT:-work}"
-  exec cswap run "$account" --require-session -- "$@"
+  exec cswap run "$account" --require-session -- --append-system-prompt "$RULES" --strict-mcp-config --mcp-config "$MCP_JSON" "$@"
 fi
 
 echo 'ERROR: claude-working requires cswap and an explicit work alias; refusing to use private credentials.' >&2

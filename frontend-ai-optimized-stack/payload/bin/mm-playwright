@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="${MM_STACK_DATA_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/frontend-ai-stack}"
+CLI="$ROOT/tools/playwright/node_modules/.bin/playwright-cli"
+[[ -x "$CLI" ]] || { echo 'Playwright CLI missing; run setup-workflow-tools.py --install.' >&2; exit 127; }
+export PLAYWRIGHT_MCP_BROWSER="${PLAYWRIGHT_MCP_BROWSER:-firefox}"
+project_key="$(printf '%s' "$PWD" | sha256sum | cut -c1-16)"
+export PLAYWRIGHT_CLI_SESSION="${PLAYWRIGHT_CLI_SESSION:-${MM_AGENT_PROFILE:-private}-$project_key}"
+exec "$CLI" "$@"

@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+"""Stage and validate upstream Working skills; never edit project/plugin files."""
+import argparse
+from datetime import datetime, timezone
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import tempfile
+import yaml
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--only', choices=['vercel', 'figma', 'all'], default='vercel')
+    parser.add_argument('--ref', help='Reviewed upstream branch/tag (otherwise the default branch)')
+    parser.add_argument('--quiet', action='store_true')
+    parser.add_argument('--allow-duplicate-figma', action='store_true')
+    args = parser.parse_args()
+    stack = Path(os.getenv('MM_STACK_DATA_HOME', str(Path(os.getenv('XDG_DATA_HOME', str(Path.home() / '.local/share'))) / 'frontend-ai-stack')))
+    dest = stack / 'skills/working'
+    upstream = stack / 'upstream'
+    dest.mkdir(parents=True, exist_ok=True)
+    upstream.mkdir(parents=True, exist_ok=True)
+    sources = {
+        'vercel': ('https://github.com/vercel-labs/agent-skills.git', ['react-best-practices', 'composition-patterns'], 'vercel-agent-skills'),
+        'figma': ('https://github.com/figma/mcp-server-guide.git', ['figma-use', 'figma-design-to-code', 'figma-code-connect'], 'figma-mcp-server-guide'),
+    }
+    selected = sources if args.only == 'all' else {args.only: sources[args.only]}
+    for name, (url, skills, record) in selected.items():
+        if name == 'figma' and not args.allow_duplicate_figma:
+            caches = [Path.home() / '.codex/plugins/cache', stack / 'codex-working-home/plugins/cache']
+            if any(list(cache.glob('*/figma/*/skills/figma-use/SKILL.md')) for cache in caches):
+                raise ValueError('Figma plugin is cached; verify the target client before explicitly allowing duplicate Figma skills')
+        with tempfile.TemporaryDirectory(prefix='.skills-', dir=upstream) as tmp:
+            source = Path(tmp) / 'source'
+            clone = ['git', '-c', 'core.hooksPath=/dev/null', 'clone', '--depth', '1', '--quiet']
+            if args.ref:
+                clone += ['--branch', args.ref]
+            clone += ['--', url, str(source)]
+            subprocess.run(clone, check=True)
+            commit = subprocess.check_output(['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip()
+            for skill in skills:
+                path = source / 'skills' / skill / 'SKILL.md'
+                text = path.read_text()
+                parts = text.split('---', 2)
+                if not text.startswith('---\n') or len(parts) != 3:
+                    raise ValueError(f'{name}/{skill}: invalid frontmatter')
+                metadata = yaml.safe_load(parts[1])
+                if not isinstance(metadata, dict) or not all(isinstance(metadata.get(k), str) and metadata[k].strip() for k in ('name', 'description')):
+                    raise ValueError(f'{name}/{skill}: missing metadata')
+                if (dest / skill).is_symlink():
+                    raise ValueError(f'{skill}: refusing to replace a symlink')
+            stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+            backup = upstream / 'backups' / f'{stamp}-{name}'
+            backup.mkdir(parents=True)
+            published = []
+            try:
+                for skill in skills:
+                    target = dest / skill
+                    if target.exists():
+                        os.replace(target, backup / skill)
+                    published.append(skill)
+                    os.replace(source / 'skills' / skill, target)
+            except OSError:
+                for skill in reversed(published):
+                    target = dest / skill
+                    if target.exists():
+                        shutil.rmtree(target)
+                    if (backup / skill).exists():
+                        os.replace(backup / skill, target)
+                raise
+            (upstream / f'{record}.commit').write_text(commit + '\n')
+            (upstream / f'{record}.json').write_text(json.dumps({'source': url, 'commit': commit, 'skills': skills}, indent=2) + '\n')
+            if not args.quiet:
+                print(f'PASS  {name}: validated and refreshed {len(skills)} Working skills at {commit}')
+    resolver = Path.home() / '.local/bin/mm-profile-skills-sync'
+    if resolver.exists() and (Path.home() / '.omp/profiles/working/agent/skills').is_dir():
+        subprocess.run([str(resolver), 'omp', 'working', '--quiet'], check=True)
+    return 0
+
+
+if __name__ == '__main__':
+    try:
+        raise SystemExit(main())
+    except (OSError, ValueError, subprocess.CalledProcessError, yaml.YAMLError) as exc:
+        print(f'FAIL  Skill refresh: {exc}', file=__import__('sys').stderr)
+        raise SystemExit(1)

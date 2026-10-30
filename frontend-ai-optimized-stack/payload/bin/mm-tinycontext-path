@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stable TinyContext project identity shared by Claude/Codex and Git worktrees.
+"""Stable TinyContext project identity shared by Claude/Codex/OMP and Git worktrees.
 
 No network, client credentials, DB writes, or imports outside the standard library.
 """
@@ -39,7 +39,7 @@ def identity(path: Path) -> Path:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description='Resolve shared Claude/Codex TinyContext project storage')
+    ap = argparse.ArgumentParser(description='Resolve shared Claude/Codex/OMP TinyContext project storage')
     ap.add_argument('action', nargs='?', choices=['info', 'db', 'key', 'root'], default='info')
     ap.add_argument('--profile', choices=['working', 'private'], default=os.getenv('MM_AGENT_PROFILE', 'private'))
     ap.add_argument('--project', default=os.getenv('MM_TINYCONTEXT_PROJECT_ROOT', os.getcwd()))
@@ -60,7 +60,7 @@ def main() -> None:
     elif args.action == 'key':
         print(key)
     else:
-        print(f'profile={args.profile}\nproject_root={root}\nproject_hash={key}\ndatabase={db}\nshared_clients=claude,codex\ndatabase_exists={"yes" if db.is_file() else "no (created on first use)"}')
+        print(f'profile={args.profile}\nproject_root={root}\nproject_hash={key}\ndatabase={db}\nshared_clients=claude,codex,omp\ndatabase_exists={"yes" if db.is_file() else "no (created on first use)"}')
 
 
 if __name__ == '__main__':

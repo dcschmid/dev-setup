@@ -1,6 +1,6 @@
 ---
 name: mm-figma-source-of-truth
-description: Working-project UI policy: Figma and Code Connect are the source of truth; implementation must not invent a competing design system.
+description: "Working-project UI policy: Figma and Code Connect are the source of truth; implementation must not invent a competing design system."
 ---
 # Figma is the source of truth
 

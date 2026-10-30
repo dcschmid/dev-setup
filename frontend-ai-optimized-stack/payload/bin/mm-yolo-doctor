@@ -7,18 +7,25 @@ for p in working private; do
   [[ -f "$d/config.yml" ]] && echo "PASS  $p configuration exists" || echo "WARN  $p configuration missing"
   [[ -f "$d/mcp.json" ]] && echo "PASS  $p MCP configuration exists" || echo "WARN  $p MCP configuration missing"
   [[ -d "$d/skills" ]] && echo "PASS  $p skills directory exists" || echo "WARN  $p skills directory missing"
-  if [[ -f "$d/config.yml" ]] && grep -Fq '# BEGIN FRONTEND-AI-STACK OMP WORKFLOW v3.13.2' "$d/config.yml"; then
-    echo "PASS  $p advanced workflow policy present (LSP/task/GitGuard/skill management)"
+  if [[ -f "$d/config.yml" ]]; then
     python3 - "$d/config.yml" "$p" <<'PYDOCTOR'
-import sys,re
+import sys, yaml
 from pathlib import Path
-s=Path(sys.argv[1]).read_text();p=sys.argv[2]
-for key in ('browser','computer'):
-    m=re.search(r'^'+key+r':\n  enabled: (true|false)',s,re.M)
-    print(f'INFO  {p} {key}: '+(m.group(1) if m else 'undetermined'))
-print(f'INFO  {p} OMP memory: off (TinyContext via MCP)')
+p = sys.argv[2]
+try:
+    config = yaml.load(Path(sys.argv[1]).read_text(), Loader=yaml.BaseLoader)
+    for key in ('browser', 'computer'):
+        print(f'INFO  {p} {key}: {config.get(key, {}).get("enabled", "unconfigured")}')
+    backend = config.get('memory', {}).get('backend', 'unconfigured')
+    print(f'{"PASS" if backend == "off" else "FAIL"}  {p} OMP memory backend: {backend}')
+    if all(key in config for key in ('lsp', 'task', 'autolearn', 'tools')):
+        print(f'PASS  {p} workflow settings present (comment markers not required)')
+    else:
+        print(f'WARN  {p} workflow settings incomplete')
+except (OSError, ValueError, AttributeError, yaml.YAMLError):
+    print(f'FAIL  {p} YAML cannot be inspected')
 PYDOCTOR
-  else echo "INFO  $p advanced features not configured"; fi
+  fi
   [[ -f "$d/extensions/yolo-todo-discipline.ts" ]] && echo "INFO  $p YOLO Todo Discipline staged+enabled for yolo-auto/yolo" || echo "INFO  $p YOLO Todo Discipline not enabled"
 
 done

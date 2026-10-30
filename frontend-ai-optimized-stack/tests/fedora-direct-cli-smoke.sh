@@ -123,7 +123,7 @@ printf 'CUSTOM\n' > "$T/home/.codex/skills/user-owned/SKILL.md"
 export HOME="$T/home" XDG_CONFIG_HOME="$T/home/.config" PATH="$T/home/.local/bin:$T/mockbin:/usr/bin:/bin"
 "$ROOT/install-profiles.sh" > "$T/install-output"
 "$ROOT/verify-profiles.sh" > "$T/verify-output" || { cat "$T/verify-output"; exit 1; }
-grep -q 'VERIFICATION_PASS v3.13.4' "$T/verify-output"
+grep -q 'VERIFICATION_PASS v3.14.0' "$T/verify-output"
 grep -q 'disable --now codex-swap-auto.service' "$HOME/systemctl-called"
 [[ ! -f "$HOME/cxswap-service-active" ]]
 [[ "$(cat "$HOME/.codex/auth.json")" == AUTH_SENTINEL ]]
@@ -157,7 +157,7 @@ PYTH
 "$HOME/.local/bin/omp-working" --version
 "$HOME/.local/bin/omp-private" --version
 [[ -L "$HOME/.omp/profiles/working/agent/skills/project-memory" ]]
-[[ -L "$HOME/.omp/profiles/private/agent/skills/mm-gamedev-core" ]]
+[[ -L "$HOME/.omp/profiles/private/agent/skills/mm-game-project-engineering" ]]
 # OMP-only skill is present in both named OMP profiles, never in Claude/Codex.
 for profile in working private; do
   [[ -L "$HOME/.omp/profiles/$profile/agent/skills/mm-omp-code-workflow" ]]

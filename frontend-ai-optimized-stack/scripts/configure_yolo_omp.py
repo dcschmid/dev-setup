@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -100,46 +101,32 @@ def run(check, preflight=False):
         if preflight:
             print(f'PASS  preflight {profile}: safe to configure')
             continue
-        expected = {}
         for group in ('shared', profile, 'omp'):
-            g = skills_root / group
-            if not g.is_dir():
-                fail(f'Missing package skill group {g}')
-            for path in sorted(g.iterdir()):
-                if path.is_dir() and (path / 'SKILL.md').is_file():
-                    expected[path.name] = path
-        # Clean up only previously managed links, including retired Blender skills.
-        prior = []
-        if manifest.exists():
-            try:
-                prior = json.loads(manifest.read_text()).get('links', [])
-            except (ValueError, TypeError):
-                fail(f'{manifest}: malformed managed link manifest')
+            if not (skills_root / group).is_dir():
+                fail(f'Missing package skill group {skills_root / group}')
+        # Retire links from the old OMP-only manifest, preserving user entries.
+        if not check and manifest.exists():
+            prior = json.loads(manifest.read_text()).get('links', [])
+            for name in prior:
+                if not isinstance(name, str) or '/' in name or name in ('', '.', '..'):
+                    fail('Malformed OMP skill link manifest')
+                path = skill_dir / name
+                if path.is_symlink() and path.resolve(strict=False).is_relative_to(skills_root.resolve()):
+                    path.unlink()
+        resolver = home / '.local/bin/mm-profile-skills-sync'
+        if not resolver.is_file():
+            fail('Shared skill resolver missing; run install-profiles.sh')
+        command = [str(resolver), 'omp', profile, '--json']
+        if check:
+            command.append('--dry-run')
+        resolved = subprocess.run(command, check=True, capture_output=True, text=True)
+        selected = json.loads(resolved.stdout)
+        for row in selected['linked']:
+            target = Path(row['target_path'])
+            if not target.is_symlink() or target.resolve() != Path(row['path']).resolve():
+                fail(f'Missing managed skill {target}')
         if not check:
-            skill_dir.mkdir(parents=True, exist_ok=True)
-            for item in prior:
-                p = skill_dir / item
-                if p.is_symlink():
-                    try:
-                        p.resolve(strict=False).relative_to(skills_root.resolve())
-                    except ValueError:
-                        continue
-                    p.unlink()
-        installed = []
-        for name, src in expected.items():
-            dst = skill_dir / name
-            if dst.exists() or dst.is_symlink():
-                if dst.is_symlink() and dst.resolve(strict=False) == src.resolve():
-                    installed.append(name)
-                    continue
-                print(f'INFO  User skill takes precedence; not replacing {dst}')
-                continue
-            if check:
-                fail(f'Missing managed skill {dst}')
-            dst.symlink_to(src)
-            installed.append(name)
-        if not check:
-            manifest.write_text(json.dumps({'links': installed, 'profile': profile}, indent=2) + '\n')
+            manifest.write_text(json.dumps({'links': [row['dir_name'] for row in selected['linked']], 'profile': profile}, indent=2) + '\n')
         print(f'PASS  {profile}: native OMP profile, TinySearch/TinyContext, skills; Blender={profile == "private"}')
 
 

@@ -1,73 +1,133 @@
 #!/usr/bin/env python3
-import hashlib, os, re, subprocess, sys
+"""Read-only skill metadata, profile, dependency and installation audit."""
+import argparse
+import hashlib
+import json
+import os
 from pathlib import Path
+import re
+import shutil
+import subprocess
+import yaml
 
-SKILL_ROOTS=['.claude/skills','.codex/skills','.agents/skills','.agent/skills','.github/skills']
-STACK=Path(os.environ.get('MM_STACK_DATA_HOME', str(Path(os.environ.get('XDG_DATA_HOME', str(Path.home()/'.local/share')))/'frontend-ai-stack')))
+STACK = Path(os.getenv('MM_STACK_DATA_HOME', str(Path(os.getenv('XDG_DATA_HOME', str(Path.home() / '.local/share'))) / 'frontend-ai-stack')))
+ROOTS = ('.claude/skills', '.codex/skills', '.agents/skills', '.agent/skills', '.github/skills')
 
-def repo_root(cwd: Path) -> Path:
-    try:
-        out=subprocess.check_output(['git','-C',str(cwd),'rev-parse','--show-toplevel'],stderr=subprocess.DEVNULL,text=True).strip()
-        if out: return Path(out).resolve()
-    except Exception: pass
-    return cwd.resolve()
 
-def parse_skill(path: Path):
-    text=path.read_text(encoding='utf-8',errors='replace')
-    head=''
-    if text.startswith('---'):
-        parts=text.split('---',2)
-        if len(parts)>=3: head=parts[1]
-    def fm(key):
-        m=re.search(rf'(?m)^{re.escape(key)}\s*:\s*["\']?([^\n"\']+)', head or text)
-        return m.group(1).strip() if m else ''
-    return text, fm('name'), fm('description')
+def manifests(root):
+    seen = set()
+    if not root.is_dir():
+        return
+    for current, dirs, files in os.walk(root, followlinks=True):
+        real = Path(current).resolve()
+        if real in seen:
+            dirs[:] = []
+            continue
+        seen.add(real)
+        dirs[:] = sorted(d for d in dirs if d not in ('.git', '__pycache__', 'node_modules'))
+        if 'SKILL.md' in files:
+            yield Path(current) / 'SKILL.md'
 
-def scan(root: Path, origin: str):
-    out=[]
-    if not root.is_dir(): return out
-    for f in sorted(root.rglob('SKILL.md')):
-        try: text,name,desc=parse_skill(f)
-        except Exception as e:
-            out.append((origin,f,'', '',0,'ERR',f'unreadable: {e}')); continue
-        issues=[]
-        if not name: issues.append('missing name')
-        if not desc: issues.append('missing description')
-        if len(text.encode('utf-8'))>32768: issues.append('large >32 KiB')
-        if len(text.splitlines())>500: issues.append('long >500 lines')
-        lower=text.lower()
-        stale=[]
-        for token in ['mm-execution-governor','qwen3.8-flash:low','codex = planner','claude = reviewer']:
-            if token in lower: stale.append(token)
-        if stale: issues.append('legacy wording: '+', '.join(stale))
-        out.append((origin,f,name or f.parent.name,desc,len(text.encode('utf-8')),'WARN' if issues else 'OK','; '.join(issues)))
-    return out
 
 def main():
-    cwd=Path.cwd(); repo=repo_root(cwd)
-    rows=[]
-    for group in ['shared','private','working']:
-        rows+=scan(STACK/'skills'/group, f'package/{group}')
-    for rel in SKILL_ROOTS:
-        rows+=scan(repo/rel, f'workspace/{rel}')
-    print('Skill audit: frontmatter, size, stale stack wording, and duplicate names')
-    print(f'Workspace: {repo}')
-    print('Precedence remains: workspace/repo > profile > shared package fallback\n')
-    names={}
-    warns=0
-    for origin,f,name,desc,size,status,detail in rows:
-        names.setdefault(name,[]).append((origin,f,hashlib.sha256(f.read_bytes()).hexdigest() if f.is_file() else ''))
-        if status!='OK':
-            warns+=1; print(f'WARN  {name:<34} {origin}: {detail}')
-    for name,vals in sorted(names.items()):
-        if not name or len(vals)<2: continue
-        package=[v for v in vals if v[0].startswith('package/')]
-        workspace=[v for v in vals if v[0].startswith('workspace/')]
-        if workspace and package:
-            print(f'INFO  {name:<34} workspace overrides package fallback')
-        elif len({v[2] for v in vals})>1:
-            warns+=1; print(f'WARN  {name:<34} multiple non-identical definitions: '+', '.join(v[0] for v in vals))
-    print(f'\nAudited {len(rows)} skill files; warnings: {warns}.')
-    print('Use Claude /doctor prompt-audit for an additional Claude-specific prompt audit when desired.')
-    return 0
-if __name__=='__main__': raise SystemExit(main())
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--profile', choices=['private', 'working', 'both'], default=os.getenv('MM_AGENT_PROFILE', 'both'))
+    parser.add_argument('--client', choices=['codex', 'claude', 'omp', 'all'], default='all')
+    parser.add_argument('--plugins', action='store_true', help='Also inspect cached plugin files; caching does not establish activation')
+    parser.add_argument('--strict', action='store_true', help='Fail for invalid metadata, conflicts or owned installation drift')
+    parser.add_argument('--json', action='store_true')
+    parser.add_argument('--source', type=Path, help='Stack source directory used for owned-file drift checks')
+    args = parser.parse_args()
+    home = Path.home()
+    profiles = ['private', 'working'] if args.profile == 'both' else [args.profile]
+    groups = ['shared'] + profiles + (['omp'] if args.client in ('omp', 'all') else [])
+    roots = [(f'package/{group}', STACK / 'skills' / group) for group in groups]
+    result = subprocess.run(['git', 'rev-parse', '--show-toplevel'], capture_output=True, text=True)
+    cwd = Path.cwd().resolve()
+    repo = Path(result.stdout.strip()) if result.returncode == 0 else cwd
+    ancestors = [cwd]
+    while ancestors[-1] != repo and repo in ancestors[-1].parents:
+        ancestors.append(ancestors[-1].parent)
+    for anc in ancestors:
+        roots += [(f'workspace/{anc}/{rel}', anc / rel) for rel in ROOTS]
+    if args.client in ('codex', 'all'):
+        roots += [('installed/codex-private', home / '.codex/skills')] if 'private' in profiles else []
+        roots += [('installed/codex-working', Path(os.getenv('MM_CODEX_WORKING_HOME', str(STACK / 'codex-working-home'))) / 'skills')] if 'working' in profiles else []
+    if args.client in ('claude', 'all'):
+        roots += [('installed/claude-current', home / '.claude/skills')]
+    if args.client in ('omp', 'all'):
+        roots += [(f'installed/omp-{profile}', home / f'.omp/profiles/{profile}/agent/skills') for profile in profiles]
+    if args.plugins:
+        roots += [('cached-plugin (activation unknown)', home / '.codex/plugins/cache')]
+    rows, seen, problems, names = [], set(), [], {}
+    for origin, root in roots:
+        for path in manifests(root):
+            real = path.resolve()
+            if real in seen:
+                continue
+            seen.add(real)
+            issues, info = [], []
+            name = path.parent.name
+            try:
+                text = path.read_text()
+                match = re.match(r'\A---\r?\n(.*?)\r?\n---(?:\r?\n|$)', text, re.S)
+                if not match:
+                    raise ValueError('missing YAML frontmatter delimiters')
+                meta = yaml.safe_load(match.group(1))
+                if not isinstance(meta, dict):
+                    raise ValueError('frontmatter must be a mapping')
+                name = meta.get('name', '')
+                if not isinstance(name, str) or not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,63}', name):
+                    issues.append('invalid/missing name')
+                if not isinstance(meta.get('description'), str) or not meta['description'].strip():
+                    issues.append('invalid/missing description')
+                if len(text.encode()) > 32768 or len(text.splitlines()) > 500:
+                    info.append('large entrypoint; review progressive disclosure if stack-owned')
+                for token in ('mm-execution-governor', 'qwen3.8-flash:low', 'codex = planner', 'claude = reviewer'):
+                    if token in text.lower():
+                        issues.append('legacy wording: ' + token)
+                fingerprint = hashlib.sha256(text.encode()).hexdigest()
+            except (OSError, ValueError, yaml.YAMLError):
+                issues.append('unreadable or invalid YAML frontmatter')
+                fingerprint = ''
+            scope = 'workspace' if origin.startswith('workspace/') else origin
+            if origin.startswith('cached-plugin'):
+                scope = '/'.join(path.relative_to(root).parts[:3])
+            key = (scope, name if isinstance(name, str) else str(name))
+            if key in names and fingerprint != names[key]:
+                issues.append('conflicting definitions in the same scope')
+            names[key] = fingerprint
+            row = {'origin': origin, 'path': str(path), 'name': name, 'issues': issues, 'info': info}
+            rows.append(row)
+            problems.extend(f'{path}: {issue}' for issue in issues)
+    source = args.source
+    marker = STACK / 'source-root'
+    if source is None and marker.exists():
+        source = Path(marker.read_text().strip())
+    if source and (source / 'payload').is_dir():
+        candidates = [(p, STACK / 'skills' / group / p.relative_to(source / 'payload' / group / 'skills'))
+                      for group in groups for p in (source / 'payload' / group / 'skills').rglob('*') if p.is_file()]
+        candidates += [(p, home / '.local/bin' / p.name) for p in (source / 'payload/bin').iterdir() if p.is_file()]
+        for src, installed in candidates:
+            if not installed.is_file() or src.read_bytes() != installed.read_bytes():
+                problems.append(f'owned installation drift: {installed}')
+    capabilities = {name: bool(shutil.which(name)) for name in ('gh', 'glab', 'semgrep', 'mm-playwright', 'shellcheck')}
+    report = {'profile': args.profile, 'client': args.client, 'skills': rows, 'problems': problems, 'capabilities': capabilities}
+    if args.json:
+        print(json.dumps(report, indent=2))
+    else:
+        print(f'Skill audit: {len(rows)} unique manifests; profile={args.profile}, client={args.client}')
+        for row in rows:
+            for detail in row['info']:
+                print(f'INFO  {row["name"]}: {detail} ({row["origin"]})')
+        for problem in problems:
+            print('WARN  ' + problem)
+        print('INFO  CLI capabilities: ' + ', '.join(f'{key}={"available" if value else "absent"}' for key, value in capabilities.items()))
+        if args.plugins:
+            print('INFO  Plugin cache presence is not proof of activation; vendor files were inspected read-only.')
+        print(f'{"FAIL" if problems else "PASS"}  {len(problems)} problems')
+    return 1 if args.strict and problems else 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

@@ -106,10 +106,12 @@ def classify_workspace_duplicates(by_name):
     return mirrors, conflicts
 
 
-def package_skills(profile: str):
+def package_skills(profile: str, client: str):
     data = Path(os.environ.get('XDG_DATA_HOME', str(Path.home() / '.local/share')))
     base = Path(os.environ.get('MM_STACK_DATA_HOME', str(data / 'frontend-ai-stack'))) / 'skills'
     groups = [('profile', base / profile), ('shared', base / 'shared')]
+    if client == 'omp':
+        groups.append(('omp', base / 'omp'))
     out = []
     seen = set()
     for group, root in groups:
@@ -133,6 +135,8 @@ def target_dir(client: str, profile: str) -> Path:
         return Path(os.environ.get('CODEX_HOME') or str(h / '.codex')) / 'skills'
     if client == 'claude':
         return h / '.claude' / 'skills'
+    if client == 'omp':
+        return h / '.omp/profiles' / profile / 'agent/skills'
     raise ValueError(client)
 
 
@@ -180,7 +184,7 @@ def safe_unlink_managed(dst: Path, manifest: Path, stack_root: Path):
 
 def main():
     ap = argparse.ArgumentParser(description='Resolve package skill fallbacks behind workspace/repo skills.')
-    ap.add_argument('client', choices=['codex', 'claude'])
+    ap.add_argument('client', choices=['codex', 'claude', 'omp'])
     ap.add_argument('profile', choices=['private', 'working'])
     ap.add_argument('--root', default=None, help='Workspace directory to inspect; defaults to cwd.')
     ap.add_argument('--dry-run', action='store_true')
@@ -190,7 +194,7 @@ def main():
 
     cwd = Path(args.root or os.getcwd()).resolve()
     repo, ws_by_name, ws_entries = workspace_skills(cwd)
-    stack_root, pkg = package_skills(args.profile)
+    stack_root, pkg = package_skills(args.profile, args.client)
     ws_mirrors, ws_conflicts = classify_workspace_duplicates(ws_by_name)
     dst = target_dir(args.client, args.profile)
     manifest = dst / '.mm-managed-package-links-v392.json'

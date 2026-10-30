@@ -1,0 +1,189 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+die() {
+  printf 'ERROR: %s\n' "$*" >&2
+  exit 1
+}
+
+need_repo() {
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1 ||
+    die "Run this inside a Git worktree."
+}
+
+main_worktree() {
+  git worktree list --porcelain |
+    awk '/^worktree / {sub(/^worktree /, ""); print; exit}'
+}
+
+worktree_paths() {
+  git worktree list --porcelain |
+    awk '/^worktree / {sub(/^worktree /, ""); print}'
+}
+
+branch_slug() {
+  printf '%s' "$1" |
+    sed -E 's|/+|-|g; s|[^A-Za-z0-9._-]+|-|g; s|^-+||; s|-+$||'
+}
+
+choose_worktree() {
+  need_repo
+
+  local paths
+  paths="$(worktree_paths)"
+
+  if command -v fzf >/dev/null 2>&1; then
+    printf '%s\n' "$paths" |
+      fzf --prompt='worktree> ' --height=40% --layout=reverse --border=rounded
+    return
+  fi
+
+  printf '%s\n' "$paths" >&2
+  return 1
+}
+
+new_worktree() {
+  need_repo
+
+  local branch="${1:-}"
+  local start="${2:-HEAD}"
+
+  [[ -n "$branch" ]] ||
+    die "Usage: git-worktree-helper new <branch> [start-point]"
+
+  local main repo_name parent base slug target
+  main="$(main_worktree)"
+  repo_name="$(basename "$main")"
+  parent="$(dirname "$main")"
+  base="$parent/${repo_name}-worktrees"
+  slug="$(branch_slug "$branch")"
+  [[ -n "$slug" ]] || die "Could not create a safe directory name from branch: $branch"
+  target="$base/$slug"
+
+  [[ ! -e "$target" ]] ||
+    die "Target already exists: $target"
+
+  mkdir -p "$base"
+
+  printf 'Creating worktree:\n  branch: %s\n  path:   %s\n' "$branch" "$target" >&2
+
+  if git show-ref --verify --quiet "refs/heads/$branch"; then
+    git worktree add "$target" "$branch" >&2
+  else
+    mapfile -t remotes < <(
+      git for-each-ref --format='%(refname:short)' "refs/remotes/*/$branch" |
+        grep -v '/HEAD$' || true
+    )
+
+    if [[ "${#remotes[@]}" -eq 1 ]]; then
+      git worktree add --track -b "$branch" "$target" "${remotes[0]}" >&2
+    elif [[ "${#remotes[@]}" -gt 1 ]]; then
+      printf 'Matching remote branches:\n' >&2
+      printf '  %s\n' "${remotes[@]}" >&2
+      die "Branch exists on multiple remotes. Create/select it manually first."
+    else
+      git worktree add -b "$branch" "$target" "$start" >&2
+    fi
+  fi
+
+  # stdout intentionally contains only the final path so Zsh can `cd` to it.
+  printf '%s\n' "$target"
+}
+
+remove_worktree() {
+  need_repo
+
+  local target="${1:-}"
+  if [[ -z "$target" ]]; then
+    target="$(choose_worktree)" || die "No worktree selected."
+  fi
+
+  target="$(cd "$target" 2>/dev/null && pwd)" ||
+    die "Worktree path not found: $target"
+
+  local main current
+  main="$(cd "$(main_worktree)" && pwd)"
+  current="$(pwd)"
+
+  [[ "$target" != "$main" ]] ||
+    die "Refusing to remove the main worktree."
+
+  [[ "$target" != "$current" ]] ||
+    die "Refusing to remove the worktree you are currently inside."
+
+  git worktree list --porcelain |
+    awk '/^worktree / {sub(/^worktree /, ""); print}' |
+    grep -Fxq "$target" ||
+    die "Not a registered worktree: $target"
+
+  if [[ -n "$(git -C "$target" status --porcelain 2>/dev/null)" ]]; then
+    printf 'Worktree has uncommitted changes:\n\n' >&2
+    git -C "$target" status --short >&2 || true
+    die "Refusing to remove a dirty worktree."
+  fi
+
+  printf 'Remove worktree?\n  %s\n[y/N] ' "$target" >&2
+  read -r answer
+  case "$answer" in
+    [Yy]|[Yy][Ee][Ss])
+      git worktree remove "$target"
+      printf 'Removed worktree. Branch was NOT deleted.\n' >&2
+      ;;
+    *)
+      printf 'Cancelled.\n' >&2
+      ;;
+  esac
+}
+
+usage() {
+  cat <<'EOF'
+git-worktree-helper
+
+Commands:
+  list
+      Show all worktrees.
+
+  choose
+      Pick a worktree with fzf and print only its path.
+
+  new <branch> [start-point]
+      Create a linked worktree and print only its path.
+      New worktrees live beside the main repo:
+        repo-worktrees/<branch>
+
+  remove [path]
+      Safely remove a clean linked worktree.
+      Never force-removes and never deletes the branch.
+
+  prune
+      Run `git worktree prune -v`.
+EOF
+}
+
+case "${1:-}" in
+  list)
+    need_repo
+    git worktree list
+    ;;
+  choose)
+    choose_worktree
+    ;;
+  new)
+    shift
+    new_worktree "$@"
+    ;;
+  remove)
+    shift
+    remove_worktree "${1:-}"
+    ;;
+  prune)
+    need_repo
+    git worktree prune -v
+    ;;
+  -h|--help|help|"")
+    usage
+    ;;
+  *)
+    die "Unknown command: $1"
+    ;;
+esac

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+profile="${1:-working}"
+[[ "$profile" == private || "$profile" == working ]] || { echo 'Usage: mm-skill-precedence-doctor [private|working]' >&2; exit 2; }
+echo "== Workspace skill precedence audit ($profile) =="
+for client in codex claude; do
+  echo
+  mm-profile-skills-sync "$client" "$profile" --dry-run
+ done

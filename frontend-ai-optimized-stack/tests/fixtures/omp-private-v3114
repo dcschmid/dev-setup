@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+mm-profile-skills-sync omp private --quiet
+mm-yolo-model-sync private --quiet || true
+exec omp --profile private "$@"

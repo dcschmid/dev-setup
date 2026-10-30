@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+command -v omp >/dev/null || { echo 'ERROR: omp missing. Install from https://omp.sh/install.' >&2; exit 127; }
+export MM_AGENT_PROFILE=working
+export OMP_PROFILE=working
+export MM_TINYCONTEXT_PROJECT_ROOT="${MM_TINYCONTEXT_PROJECT_ROOT:-$PWD}"
+exec omp --profile working "$@"

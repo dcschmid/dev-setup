@@ -1,0 +1,14 @@
+# Kitty Workspace Pack v1.5.2 — first-run baseline
+# Only two tabs. Everything the user adds later is saved/restored.
+os_window_title Kitty Workspace
+os_window_state maximized
+
+new_tab Unified Frontend 1
+cd ~/dev/gitlab/unified-frontend
+launch
+
+new_tab Unified Frontend 2
+cd ~/dev/gitlab/unified-frontend
+launch
+
+focus_tab 0

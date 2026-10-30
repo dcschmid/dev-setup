@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+command -v codex >/dev/null || { echo 'ERROR: Codex CLI is not installed.' >&2; exit 127; }
+export MM_AGENT_PROFILE=private
+export MM_TINYCONTEXT_PROJECT_ROOT="${MM_TINYCONTEXT_PROJECT_ROOT:-$PWD}"
+mm-profile-skills-sync codex private --quiet
+UVX="$(command -v uvx || true)"
+[[ -n "$UVX" ]] || { echo 'ERROR: uvx required for private Blender MCP.' >&2; exit 1; }
+BLENDER_TOML="{command=\"$UVX\",args=[\"mcp-for-blender@2.2.0\"],env={BLENDER_HOST=\"127.0.0.1\",BLENDER_PORT=\"9876\",BLENDER_MCP_SAFE_MODE=\"1\",DISABLE_TELEMETRY=\"true\"}}"
+# Only the private Codex launcher adds Blender. Manual account selection is done
+# with the standard Codex login flow (no swap daemon or proxy).
+exec codex -c "mcp_servers.blender=$BLENDER_TOML" "$@"

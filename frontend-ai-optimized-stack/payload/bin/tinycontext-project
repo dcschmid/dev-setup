@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+DIR="$(dirname "$(readlink -f "$0")")"
+case "${1:-info}" in
+  info|--info) exec "$DIR/mm-tinycontext-path" info ;;
+  db|--db) exec "$DIR/mm-tinycontext-path" db ;;
+  root|--root) exec "$DIR/mm-tinycontext-path" root ;;
+  doctor) exec "$DIR/tinycontext-doctor" ;;
+  mcp) exec "$DIR/mm-tinycontext-mcp" ;;
+  *) echo 'Usage: tinycontext-project [info|db|root|doctor|mcp]' >&2; exit 2 ;;
+esac

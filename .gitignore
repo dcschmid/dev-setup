@@ -1,0 +1,8 @@
+# Generated at runtime by setup-shell-secrets.sh (0600, never commit)
+secrets.zsh
+*.kitty-workspace-secrets-backup-*
+
+# OS / editor noise
+.DS_Store
+*.swp
+*~

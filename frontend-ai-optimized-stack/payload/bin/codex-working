@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+command -v codex >/dev/null || { echo 'ERROR: Codex CLI is not installed.' >&2; exit 127; }
+export MM_AGENT_PROFILE=working
+export MM_TINYCONTEXT_PROJECT_ROOT="${MM_TINYCONTEXT_PROJECT_ROOT:-$PWD}"
+WORK_HOME="${MM_CODEX_WORKING_HOME:-${MM_STACK_DATA_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/frontend-ai-stack}/codex-working-home}"
+mkdir -p "$WORK_HOME"
+chmod 0700 "$WORK_HOME"
+# Only reuse shared MCP configuration, NOT the private authentication/session state.
+if [[ ! -e "$WORK_HOME/config.toml" && ! -L "$WORK_HOME/config.toml" ]]; then
+  [[ -f "$HOME/.codex/config.toml" ]] || { echo 'ERROR: run ./setup-global-mcps.sh first.' >&2; exit 1; }
+  ln -s "$HOME/.codex/config.toml" "$WORK_HOME/config.toml"
+fi
+export CODEX_HOME="$WORK_HOME"
+mm-profile-skills-sync codex working --quiet
+# No cxswap, codex-switch, or automatic account rotation.
+exec codex "$@"

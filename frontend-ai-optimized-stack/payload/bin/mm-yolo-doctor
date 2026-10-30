@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -u
+ROOT="${MM_STACK_DATA_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/frontend-ai-stack}"
+if command -v omp >/dev/null; then echo "PASS  omp: $(command -v omp)"; else echo 'INFO  omp is not installed yet'; fi
+for p in working private; do
+  d="$HOME/.omp/profiles/$p/agent"
+  [[ -f "$d/config.yml" ]] && echo "PASS  $p configuration exists" || echo "WARN  $p configuration missing"
+  [[ -f "$d/mcp.json" ]] && echo "PASS  $p MCP configuration exists" || echo "WARN  $p MCP configuration missing"
+  [[ -d "$d/skills" ]] && echo "PASS  $p skills directory exists" || echo "WARN  $p skills directory missing"
+  if [[ -f "$d/config.yml" ]] && grep -Fq '# BEGIN FRONTEND-AI-STACK OMP WORKFLOW v3.13.2' "$d/config.yml"; then
+    echo "PASS  $p advanced workflow policy present (LSP/task/GitGuard/skill management)"
+    python3 - "$d/config.yml" "$p" <<'PYDOCTOR'
+import sys,re
+from pathlib import Path
+s=Path(sys.argv[1]).read_text();p=sys.argv[2]
+for key in ('browser','computer'):
+    m=re.search(r'^'+key+r':\n  enabled: (true|false)',s,re.M)
+    print(f'INFO  {p} {key}: '+(m.group(1) if m else 'undetermined'))
+print(f'INFO  {p} OMP memory: off (TinyContext via MCP)')
+PYDOCTOR
+  else echo "INFO  $p advanced features not configured"; fi
+  [[ -f "$d/extensions/yolo-todo-discipline.ts" ]] && echo "INFO  $p YOLO Todo Discipline staged+enabled for yolo-auto/yolo" || echo "INFO  $p YOLO Todo Discipline not enabled"
+
+done
+[[ -d "$ROOT/skills/shared" ]] && echo 'PASS  shared managed skills available'
+echo 'INFO  Do not paste Yolo API keys into diagnostics. Login separately in each OMP profile: /login yolo-auto.'

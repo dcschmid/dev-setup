@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+import hashlib, os, re, subprocess, sys
+from pathlib import Path
+
+SKILL_ROOTS=['.claude/skills','.codex/skills','.agents/skills','.agent/skills','.github/skills']
+STACK=Path(os.environ.get('MM_STACK_DATA_HOME', str(Path(os.environ.get('XDG_DATA_HOME', str(Path.home()/'.local/share')))/'frontend-ai-stack')))
+
+def repo_root(cwd: Path) -> Path:
+    try:
+        out=subprocess.check_output(['git','-C',str(cwd),'rev-parse','--show-toplevel'],stderr=subprocess.DEVNULL,text=True).strip()
+        if out: return Path(out).resolve()
+    except Exception: pass
+    return cwd.resolve()
+
+def parse_skill(path: Path):
+    text=path.read_text(encoding='utf-8',errors='replace')
+    head=''
+    if text.startswith('---'):
+        parts=text.split('---',2)
+        if len(parts)>=3: head=parts[1]
+    def fm(key):
+        m=re.search(rf'(?m)^{re.escape(key)}\s*:\s*["\']?([^\n"\']+)', head or text)
+        return m.group(1).strip() if m else ''
+    return text, fm('name'), fm('description')
+
+def scan(root: Path, origin: str):
+    out=[]
+    if not root.is_dir(): return out
+    for f in sorted(root.rglob('SKILL.md')):
+        try: text,name,desc=parse_skill(f)
+        except Exception as e:
+            out.append((origin,f,'', '',0,'ERR',f'unreadable: {e}')); continue
+        issues=[]
+        if not name: issues.append('missing name')
+        if not desc: issues.append('missing description')
+        if len(text.encode('utf-8'))>32768: issues.append('large >32 KiB')
+        if len(text.splitlines())>500: issues.append('long >500 lines')
+        lower=text.lower()
+        stale=[]
+        for token in ['mm-execution-governor','qwen3.8-flash:low','codex = planner','claude = reviewer']:
+            if token in lower: stale.append(token)
+        if stale: issues.append('legacy wording: '+', '.join(stale))
+        out.append((origin,f,name or f.parent.name,desc,len(text.encode('utf-8')),'WARN' if issues else 'OK','; '.join(issues)))
+    return out
+
+def main():
+    cwd=Path.cwd(); repo=repo_root(cwd)
+    rows=[]
+    for group in ['shared','private','working']:
+        rows+=scan(STACK/'skills'/group, f'package/{group}')
+    for rel in SKILL_ROOTS:
+        rows+=scan(repo/rel, f'workspace/{rel}')
+    print('Skill audit: frontmatter, size, stale stack wording, and duplicate names')
+    print(f'Workspace: {repo}')
+    print('Precedence remains: workspace/repo > profile > shared package fallback\n')
+    names={}
+    warns=0
+    for origin,f,name,desc,size,status,detail in rows:
+        names.setdefault(name,[]).append((origin,f,hashlib.sha256(f.read_bytes()).hexdigest() if f.is_file() else ''))
+        if status!='OK':
+            warns+=1; print(f'WARN  {name:<34} {origin}: {detail}')
+    for name,vals in sorted(names.items()):
+        if not name or len(vals)<2: continue
+        package=[v for v in vals if v[0].startswith('package/')]
+        workspace=[v for v in vals if v[0].startswith('workspace/')]
+        if workspace and package:
+            print(f'INFO  {name:<34} workspace overrides package fallback')
+        elif len({v[2] for v in vals})>1:
+            warns+=1; print(f'WARN  {name:<34} multiple non-identical definitions: '+', '.join(v[0] for v in vals))
+    print(f'\nAudited {len(rows)} skill files; warnings: {warns}.')
+    print('Use Claude /doctor prompt-audit for an additional Claude-specific prompt audit when desired.')
+    return 0
+if __name__=='__main__': raise SystemExit(main())

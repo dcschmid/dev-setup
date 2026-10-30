@@ -1,0 +1,9 @@
+{
+  "note": "Reference only. Do not install blindly: Figma remote MCP access is client-catalog controlled. Keep the company-supported Figma/Code Connect integration as the Working source of truth.",
+  "mcpServers": {
+    "figma": {
+      "type": "http",
+      "url": "https://mcp.figma.com/mcp"
+    }
+  }
+}

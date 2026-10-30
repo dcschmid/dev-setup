@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# Backward-compatible v3.9.1 name. v3.9.2 uses the shared precedence resolver.
+exec mm-profile-skills-sync "$@"

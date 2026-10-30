@@ -1,0 +1,276 @@
+#!/usr/bin/env python3
+import argparse, hashlib, json, os, re, shutil, subprocess, sys
+from pathlib import Path
+
+SKILL_ROOTS = [
+    '.claude/skills',
+    '.codex/skills',
+    '.agents/skills',
+    '.agent/skills',
+    '.github/skills',
+]
+
+
+def skill_name(skill_dir: Path) -> str:
+    f = skill_dir / 'SKILL.md'
+    if not f.is_file():
+        return skill_dir.name
+    try:
+        text = f.read_text(encoding='utf-8', errors='replace')
+    except Exception:
+        return skill_dir.name
+    # Agent Skills frontmatter is deliberately simple; keep this parser stdlib-only.
+    m = re.search(r'(?m)^name\s*:\s*["\']?([^\n"\']+?)["\']?\s*$', text)
+    return m.group(1).strip() if m else skill_dir.name
+
+
+def repo_root(cwd: Path) -> Path:
+    try:
+        out = subprocess.check_output(
+            ['git', '-C', str(cwd), 'rev-parse', '--show-toplevel'],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+        if out:
+            return Path(out).resolve()
+    except Exception:
+        pass
+    # Git may be unavailable in a minimal shell. Still honor an on-disk repo root.
+    cur = cwd.resolve()
+    while True:
+        if (cur / '.git').exists():
+            return cur
+        if cur.parent == cur:
+            break
+        cur = cur.parent
+    return cwd.resolve()
+
+
+def ancestors(cwd: Path, root: Path):
+    cwd = cwd.resolve(); root = root.resolve()
+    cur = cwd
+    seen = set()
+    while True:
+        if cur not in seen:
+            seen.add(cur); yield cur
+        if cur == root or cur.parent == cur:
+            break
+        try:
+            cur.relative_to(root)
+        except ValueError:
+            break
+        cur = cur.parent
+    if root not in seen:
+        yield root
+
+
+def skill_fingerprint(skill_dir: Path) -> str:
+    f = skill_dir / 'SKILL.md'
+    try:
+        data = f.read_bytes()
+    except Exception:
+        data = str(skill_dir.resolve()).encode('utf-8', errors='replace')
+    return hashlib.sha256(data).hexdigest()
+
+
+def workspace_skills(cwd: Path):
+    root = repo_root(cwd)
+    by_name = {}
+    entries = []
+    for anc in ancestors(cwd, root):
+        for rel in SKILL_ROOTS:
+            d = anc / rel
+            if not d.is_dir():
+                continue
+            for child in sorted(d.iterdir(), key=lambda p: p.name):
+                if not child.is_dir() or not (child / 'SKILL.md').is_file():
+                    continue
+                name = skill_name(child)
+                ent = {'name': name, 'path': str(child.resolve()), 'root': str(d.resolve()), 'fingerprint': skill_fingerprint(child)}
+                entries.append(ent)
+                by_name.setdefault(name, []).append(ent)
+    return root, by_name, entries
+
+
+def classify_workspace_duplicates(by_name):
+    mirrors = {}
+    conflicts = {}
+    for name, vals in by_name.items():
+        if len(vals) <= 1:
+            continue
+        fingerprints = {v.get('fingerprint') for v in vals}
+        if len(fingerprints) == 1:
+            mirrors[name] = vals
+        else:
+            conflicts[name] = vals
+    return mirrors, conflicts
+
+
+def package_skills(profile: str):
+    data = Path(os.environ.get('XDG_DATA_HOME', str(Path.home() / '.local/share')))
+    base = Path(os.environ.get('MM_STACK_DATA_HOME', str(data / 'frontend-ai-stack'))) / 'skills'
+    groups = [('profile', base / profile), ('shared', base / 'shared')]
+    out = []
+    seen = set()
+    for group, root in groups:
+        if not root.is_dir():
+            continue
+        for child in sorted(root.iterdir(), key=lambda p: p.name):
+            if not child.is_dir() or not (child / 'SKILL.md').is_file():
+                continue
+            name = skill_name(child)
+            # Profile-specific package skill outranks a shared fallback with same name.
+            if name in seen:
+                continue
+            seen.add(name)
+            out.append({'name': name, 'dir_name': child.name, 'path': str(child.resolve()), 'group': group})
+    return base, out
+
+
+def target_dir(client: str, profile: str) -> Path:
+    h = Path.home()
+    if client == 'codex':
+        return Path(os.environ.get('CODEX_HOME') or str(h / '.codex')) / 'skills'
+    if client == 'claude':
+        return h / '.claude' / 'skills'
+    raise ValueError(client)
+
+
+def safe_unlink_managed(dst: Path, manifest: Path, stack_root: Path):
+    # v3.9.2 JSON manifest.
+    old = []
+    if manifest.is_file():
+        try:
+            obj = json.loads(manifest.read_text())
+            old = obj.get('links', []) if isinstance(obj, dict) else []
+        except Exception:
+            old = []
+    for item in old:
+        name = item.get('dir_name') if isinstance(item, dict) else None
+        if not name:
+            continue
+        p = dst / name
+        if p.is_symlink():
+            try:
+                resolved = p.resolve(strict=False)
+                # Only remove links into our own canonical stack store.
+                resolved.relative_to(stack_root.resolve())
+                p.unlink()
+            except Exception:
+                pass
+
+    # Legacy manifest compatibility: one basename per line.
+    legacy = dst / '.mm-managed-profile-links'
+    if legacy.is_file():
+        for name in legacy.read_text(errors='ignore').splitlines():
+            name = name.strip()
+            if not name:
+                continue
+            p = dst / name
+            if p.is_symlink():
+                try:
+                    r = p.resolve(strict=False)
+                    # v3.9.1 linked back to OMP profile skills or project-memory.
+                    if '/.omp/profiles/' in str(r) or '/.agents/skills/project-memory' in str(r):
+                        p.unlink()
+                except Exception:
+                    pass
+        legacy.unlink(missing_ok=True)
+
+
+def main():
+    ap = argparse.ArgumentParser(description='Resolve package skill fallbacks behind workspace/repo skills.')
+    ap.add_argument('client', choices=['codex', 'claude'])
+    ap.add_argument('profile', choices=['private', 'working'])
+    ap.add_argument('--root', default=None, help='Workspace directory to inspect; defaults to cwd.')
+    ap.add_argument('--dry-run', action='store_true')
+    ap.add_argument('--json', action='store_true', dest='as_json')
+    ap.add_argument('--quiet', action='store_true')
+    args = ap.parse_args()
+
+    cwd = Path(args.root or os.getcwd()).resolve()
+    repo, ws_by_name, ws_entries = workspace_skills(cwd)
+    stack_root, pkg = package_skills(args.profile)
+    ws_mirrors, ws_conflicts = classify_workspace_duplicates(ws_by_name)
+    dst = target_dir(args.client, args.profile)
+    manifest = dst / '.mm-managed-package-links-v392.json'
+
+    result = {
+        'client': args.client,
+        'profile': args.profile,
+        'cwd': str(cwd),
+        'repo_root': str(repo),
+        'target': str(dst),
+        'workspace_skills': ws_entries,
+        'workspace_mirrors': ws_mirrors,
+        'workspace_conflicts': ws_conflicts,
+        'linked': [],
+        'suppressed_by_workspace': [],
+        'suppressed_by_user_target': [],
+        'skipped_client_policy': [],
+    }
+
+    if not args.dry_run:
+        dst.mkdir(parents=True, exist_ok=True)
+        safe_unlink_managed(dst, manifest, stack_root)
+
+    new_links = []
+    for item in pkg:
+        name = item['name']
+        if name in ws_by_name:
+            x = dict(item); x['workspace_paths'] = [e['path'] for e in ws_by_name[name]]
+            result['suppressed_by_workspace'].append(x)
+            continue
+
+        target = dst / item['dir_name']
+        # A non-stack target is user-owned. It outranks our package fallback.
+        if target.exists() or target.is_symlink():
+            user_owned = True
+            if target.is_symlink():
+                try:
+                    target.resolve(strict=False).relative_to(stack_root.resolve())
+                    user_owned = False
+                except Exception:
+                    user_owned = True
+            if user_owned:
+                x = dict(item); x['target_path'] = str(target)
+                result['suppressed_by_user_target'].append(x)
+                continue
+            if not args.dry_run:
+                target.unlink(missing_ok=True)
+
+        link = dict(item); link['target_path'] = str(target)
+        result['linked'].append(link)
+        new_links.append(link)
+        if not args.dry_run:
+            target.symlink_to(Path(item['path']))
+
+    if not args.dry_run:
+        manifest.write_text(json.dumps({
+            'version': 1,
+            'client': args.client,
+            'profile': args.profile,
+            'repo_root': str(repo),
+            'links': new_links,
+        }, indent=2) + '\n')
+        (dst / '.mm-active-profile').write_text(args.profile + '\n')
+
+    if args.as_json:
+        print(json.dumps(result, indent=2))
+    elif not args.quiet:
+        print(f"Skill precedence: workspace/repo > {args.profile} profile > shared package fallback")
+        print(f"Workspace: {repo}")
+        print(f"Client: {args.client}  profile: {args.profile}")
+        for x in result['suppressed_by_workspace']:
+            print(f"WORKSPACE  {x['name']:<32} overrides package ({', '.join(x['workspace_paths'])})")
+        for x in result['suppressed_by_user_target']:
+            print(f"USER       {x['name']:<32} preserves existing {x['target_path']}")
+        for x in result['linked']:
+            print(f"FALLBACK   {x['name']:<32} {x['group']} package")
+        for name, vals in result['workspace_conflicts'].items():
+            roots = ', '.join(v['path'] for v in vals)
+            print(f"WARN       {name:<32} conflicting workspace definitions: {len(vals)} ({roots})")
+
+
+if __name__ == '__main__':
+    main()

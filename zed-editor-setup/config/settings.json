@@ -1,0 +1,87 @@
+{
+  "base_keymap": "VSCode",
+  "theme": {
+    "mode": "dark",
+    "dark": "Catppuccin Mocha",
+    "light": "Catppuccin Latte"
+  },
+  "icon_theme": "Catppuccin Mocha",
+  "auto_install_extensions": {
+    "catppuccin": true,
+    "catppuccin-icons": true,
+    "astro": true,
+    "defold": true,
+    "lua": true,
+    "emmet": true,
+    "html": true,
+    "toml": true,
+    "dockerfile": true,
+    "scss": true
+  },
+  "buffer_font_family": "JetBrains Mono",
+  "buffer_font_size": 14,
+  "buffer_line_height": "standard",
+  "ui_font_size": 15,
+  "tab_size": 2,
+  "soft_wrap": "bounded",
+  "preferred_line_length": 100,
+  "autosave": "on_focus_change",
+  "inlay_hints": { "enabled": true },
+  "auto_signature_help": true,
+  "diagnostics": { "inline": { "enabled": true } },
+  "git": { "inline_blame": { "enabled": true, "delay_ms": 1000 } },
+  "project_panel": {
+    "dock": "left",
+    "default_width": 270,
+    "entry_spacing": "standard",
+    "file_icons": true,
+    "git_status": true
+  },
+  "agent": {
+    "flexible": false,
+    "default_width": 570,
+    "threads_sidebar": { "position": "right" }
+  },
+  "terminal": {
+    "shell": "system",
+    "font_family": "JetBrains Mono",
+    "font_size": 13,
+    "working_directory": "current_project_directory"
+  },
+  "file_scan_exclusions": [
+    "**/node_modules/**",
+    "**/.next/**",
+    "**/.astro/**",
+    "**/.turbo/**",
+    "**/dist/**",
+    "**/coverage/**",
+    "**/build/**",
+    "..."
+  ],
+  "lsp": {
+    "tailwindcss-language-server": {
+      "settings": {
+        "includeLanguages": { "astro": "html" },
+        "experimental": {
+          "classRegex": [
+            "class=\"([^\"]*)\"",
+            "class='([^']*)'",
+            "class:list=\"{([^}]*)}\"",
+            "class:list='{([^}]*)}'"
+          ]
+        }
+      }
+    }
+  },
+  "languages": {
+    "Astro": { "tab_size": 2, "format_on_save": "on" },
+    "TypeScript": { "tab_size": 2, "format_on_save": "on" },
+    "TSX": { "tab_size": 2, "format_on_save": "on" },
+    "JavaScript": { "tab_size": 2, "format_on_save": "on" },
+    "CSS": { "tab_size": 2, "format_on_save": "on" },
+    "HTML": { "tab_size": 2, "format_on_save": "on" },
+    "JSON": { "tab_size": 2, "format_on_save": "on" },
+    "Lua": { "tab_size": 4, "format_on_save": "off" },
+    "Defold": { "tab_size": 4, "format_on_save": "off" }
+  }
+}

@@ -1,0 +1,301 @@
+#!/usr/bin/env bash
+set -u
+
+pass(){ printf 'PASS  %-34s %s\n' "$1" "${2:-}"; }
+warn(){ printf 'WARN  %-34s %s\n' "$1" "${2:-}"; }
+info(){ printf 'INFO  %-34s %s\n' "$1" "${2:-}"; }
+
+if ! command -v cswap >/dev/null 2>&1; then
+  warn 'claude-swap' 'not found; run setup-claude-swap.sh'
+  exit 0
+fi
+pass 'claude-swap' "$(command -v cswap) ($(cswap --version 2>/dev/null | head -1 || true))"
+
+work="${MM_CLAUDE_WORK_ACCOUNT:-}"
+threshold="${MM_CLAUDE_SWAP_THRESHOLD:-90}"
+strategy="${MM_CLAUDE_PRIVATE_STRATEGY:-best}"
+
+# Prefer the actually installed service flags over environment defaults so the
+# diagnosis describes the policy that is really running.
+service_text=''
+if command -v systemctl >/dev/null 2>&1; then
+  service_text="$(systemctl --user cat claude-swap-auto.service 2>/dev/null || true)"
+fi
+if [[ -z "$service_text" && -f "$HOME/.config/systemd/user/claude-swap-auto.service" ]]; then
+  service_text="$(cat "$HOME/.config/systemd/user/claude-swap-auto.service" 2>/dev/null || true)"
+fi
+if [[ "$service_text" =~ --threshold[[:space:]]+([0-9]+([.][0-9]+)?) ]]; then
+  threshold="${BASH_REMATCH[1]}"
+fi
+if [[ "$service_text" =~ --strategy[[:space:]]+([a-z-]+) ]]; then
+  strategy="${BASH_REMATCH[1]}"
+fi
+
+[[ -n "$work" ]] && info 'Working account alias' "$work" || info 'Working account alias' 'not configured (private rotation unaffected)'
+info 'Auto-switch policy' "threshold ${threshold}% / strategy ${strategy}"
+
+if command -v systemctl >/dev/null 2>&1 && systemctl --user is-active --quiet claude-swap-auto.service 2>/dev/null; then
+  pass 'Claude auto-switch service' 'active'
+else
+  warn 'Claude auto-switch service' 'not active; setup helper can enable it'
+fi
+
+tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/mm-cswap-doctor.XXXXXX" 2>/dev/null || true)"
+if [[ -z "$tmpdir" || ! -d "$tmpdir" ]]; then
+  warn 'Doctor temp directory' 'could not create temporary directory'
+  tmpdir=''
+fi
+cleanup(){ [[ -n "$tmpdir" ]] && rm -rf "$tmpdir"; }
+trap cleanup EXIT
+
+json_ok=0
+if [[ -n "$tmpdir" ]] && cswap list --json >"$tmpdir/list.json" 2>"$tmpdir/list.err"; then
+  if command -v python3 >/dev/null 2>&1; then
+    json_ok=1
+    python3 - "$tmpdir/list.json" "$threshold" "$work" <<'PY'
+import json
+import math
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+path = Path(sys.argv[1])
+try:
+    threshold = float(sys.argv[2])
+except ValueError:
+    threshold = 90.0
+work_alias = sys.argv[3]
+
+def emit(kind, label, detail):
+    print(f"{kind:<6}{label:<34} {detail}")
+
+def pct(v):
+    if v is None:
+        return "?"
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return "?"
+    return f"{f:.0f}%" if f.is_integer() else f"{f:.1f}%"
+
+def parse_dt(value):
+    if not value or not isinstance(value, str):
+        return None
+    try:
+        text = value[:-1] + "+00:00" if value.endswith("Z") else value
+        dt = datetime.fromisoformat(text)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except ValueError:
+        return None
+
+def rel(dt):
+    if dt is None:
+        return "reset unknown"
+    now = datetime.now(timezone.utc)
+    seconds = max(0, int((dt.astimezone(timezone.utc) - now).total_seconds()))
+    days, seconds = divmod(seconds, 86400)
+    hours, seconds = divmod(seconds, 3600)
+    minutes = seconds // 60
+    if days:
+        tail = f" {hours}h" if hours else ""
+        return f"in {days}d{tail}"
+    if hours:
+        tail = f" {minutes}m" if minutes else ""
+        return f"in {hours}h{tail}"
+    return f"in {minutes}m"
+
+def local_clock(dt):
+    if dt is None:
+        return "unknown"
+    local = dt.astimezone()
+    now = datetime.now().astimezone()
+    if local.date() == now.date():
+        return local.strftime("%H:%M")
+    if local.year == now.year:
+        return local.strftime("%b %d %H:%M")
+    return local.strftime("%Y-%m-%d %H:%M")
+
+def window(acc, key):
+    usage = acc.get("usage") or {}
+    obj = usage.get(key) or {}
+    return obj.get("pct"), parse_dt(obj.get("resetsAt"))
+
+try:
+    data = json.loads(path.read_text())
+except Exception as exc:
+    emit("WARN", "claude-swap accounts", f"invalid JSON from cswap list --json: {exc}")
+    raise SystemExit(0)
+
+if data.get("error"):
+    emit("WARN", "claude-swap accounts", f"cswap reported {data['error']}")
+    raise SystemExit(0)
+
+accounts = data.get("accounts") or []
+if not accounts:
+    emit("WARN", "claude-swap accounts", "no managed accounts; add accounts with cswap add")
+    raise SystemExit(0)
+
+active_num = data.get("activeAccountNumber")
+active = next((a for a in accounts if a.get("active") or str(a.get("number")) == str(active_num)), None)
+
+if active:
+    name = active.get("alias") or f"Account-{active.get('number', '?')}"
+    email = active.get("email") or "email unknown"
+    emit("PASS", "Active Claude account", f"{name} ({email})")
+else:
+    emit("WARN", "Active Claude account", "not mapped to a managed cswap account")
+
+work = next((a for a in accounts if a.get("alias") == work_alias), None)
+if not work_alias:
+    emit("INFO", "Working auto-rotation", "not configured; private rotation unaffected")
+elif work is None:
+    emit("INFO", "Working auto-rotation", f"alias '{work_alias}' not configured; private rotation is unaffected")
+elif work.get("disabled"):
+    emit("PASS", "Working auto-rotation", f"{work_alias} is disabled from automatic rotation")
+else:
+    emit("WARN", "Working auto-rotation", f"disable '{work_alias}' from private rotation: cswap disable {work_alias}")
+
+below = []
+blocked = []
+unreadable = []
+relief = []
+
+for acc in accounts:
+    number = acc.get("number", "?")
+    name = acc.get("alias") or f"Account-{number}"
+    is_active = bool(acc.get("active") or str(number) == str(active_num))
+    disabled = bool(acc.get("disabled"))
+    status = acc.get("usageStatus") or "unknown"
+    p5, r5 = window(acc, "fiveHour")
+    p7, r7 = window(acc, "sevenDay")
+    flags = []
+    if is_active:
+        flags.append("active")
+    if disabled:
+        flags.append("disabled")
+    suffix = f" [{' / '.join(flags)}]" if flags else ""
+    w5 = f"5h {pct(p5)}" + (f" (resets {local_clock(r5)}, {rel(r5)})" if r5 else "")
+    w7 = f"7d {pct(p7)}" + (f" (resets {local_clock(r7)}, {rel(r7)})" if r7 else "")
+    emit("INFO", f"Quota {name}", f"{w5} / {w7}{suffix}")
+
+    if disabled:
+        continue
+    values = []
+    for label, value, reset in (("5h", p5, r5), ("7d", p7, r7)):
+        try:
+            f = float(value)
+        except (TypeError, ValueError):
+            continue
+        values.append((label, f, reset))
+        if f >= threshold and reset is not None:
+            relief.append((reset, name, label))
+
+    if status != "ok" or len(values) < 2:
+        unreadable.append(name)
+        continue
+    over = [label for label, value, _ in values if value >= threshold]
+    if over:
+        blocked.append((name, "/".join(over)))
+    elif not is_active:
+        below.append(name)
+
+if below:
+    emit("INFO", "Rotation candidates", f"below {threshold:g}%: {', '.join(below)}; final choice still obeys cswap hysteresis/cooldown")
+elif blocked:
+    emit("WARN", "Rotation candidates", f"no enabled alternative is below {threshold:g}%")
+elif unreadable:
+    emit("WARN", "Rotation candidates", f"usage unreadable for: {', '.join(unreadable)}")
+else:
+    emit("WARN", "Rotation candidates", "no enabled alternative account available")
+
+if relief:
+    reset, name, window_name = min(relief, key=lambda item: item[0])
+    emit("INFO", "Next quota relief", f"{name} {window_name} resets {local_clock(reset)} ({rel(reset)})")
+
+if unreadable:
+    emit("WARN", "Usage telemetry", f"unreadable/stale accounts: {', '.join(unreadable)}")
+PY
+  else
+    warn 'Account detail' 'python3 missing; cannot parse cswap JSON diagnostics'
+  fi
+fi
+
+if [[ "$json_ok" -eq 0 ]]; then
+  warn 'claude-swap JSON status' 'cswap list --json failed; falling back to human list check'
+  if [[ -n "$tmpdir" ]] && cswap list >"$tmpdir/list.txt" 2>/dev/null; then
+    if grep -Eqi "(^|[[:space:]])${work}([[:space:]]|$).*disabled|disabled.*(^|[[:space:]])${work}([[:space:]]|$)" "$tmpdir/list.txt"; then
+      pass 'Working auto-rotation' "$work is disabled from automatic rotation"
+    else
+      warn 'Working auto-rotation' "ensure '$work' is disabled: cswap disable $work"
+    fi
+  else
+    warn 'claude-swap accounts' 'cswap list failed; add accounts with cswap add'
+  fi
+fi
+
+# Ask claude-swap itself for the decision. --dry-run guarantees this probe never
+# changes the active credential; --once makes it deterministic and doctor-friendly.
+if [[ -n "$tmpdir" ]]; then
+  : >"$tmpdir/decision.jsonl"
+  cswap auto --once --dry-run --json --threshold "$threshold" --strategy "$strategy" >"$tmpdir/decision.jsonl" 2>"$tmpdir/decision.err"
+  decision_rc=$?
+  if command -v python3 >/dev/null 2>&1 && [[ -s "$tmpdir/decision.jsonl" ]]; then
+    python3 - "$tmpdir/decision.jsonl" "$decision_rc" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+rc = int(sys.argv[2])
+events = []
+for line in path.read_text(errors="replace").splitlines():
+    line = line.strip()
+    if not line:
+        continue
+    try:
+        events.append(json.loads(line))
+    except json.JSONDecodeError:
+        pass
+
+if not events:
+    print(f"WARN  {'Auto-switch decision':<34} dry-run returned exit {rc} without parseable JSON")
+    raise SystemExit(0)
+
+e = events[-1]
+event = str(e.get("event") or "unknown")
+reason = str(e.get("reason") or "")
+message = str(e.get("message") or "").strip()
+
+reason_help = {
+    "no-qualifying-candidate": "no qualifying target; candidates are too close to the threshold or their usage is unreadable",
+    "all-exhausted": "all eligible accounts are exhausted/over threshold; cswap fallback ranking decides whether moving helps",
+    "already-best": "the active account is already the best available target",
+    "cooldown": "a recent switch is still inside the anti-flapping cooldown",
+    "below-threshold": "active account is still below the configured switch threshold",
+    "usage-unavailable": "usage data is insufficient for a safe automatic switch",
+}
+
+detail = f"{event}"
+if reason:
+    detail += f" / {reason}"
+if reason in reason_help:
+    detail += f" — {reason_help[reason]}"
+elif message:
+    detail += f" — {message}"
+
+kind = "PASS" if event == "switch" else "INFO"
+if rc in (1, 3) or event in {"error", "account-quarantined"}:
+    kind = "WARN"
+print(f"{kind:<6}{'Auto-switch decision':<34} {detail}")
+PY
+  else
+    err="$(tr '\n' ' ' <"$tmpdir/decision.err" 2>/dev/null | sed 's/[[:space:]]\+/ /g; s/^ //; s/ $//' || true)"
+    [[ -n "$err" ]] || err="dry-run exited $decision_rc without JSON output"
+    warn 'Auto-switch decision' "$err"
+  fi
+fi
+
+info 'Private continuation' 'Linux Claude Code re-reads swapped credentials on the next message; keep the chat open.'
+info 'Working isolation' 'claude-working requires explicit cswap work alias; never falls back to private credentials.'

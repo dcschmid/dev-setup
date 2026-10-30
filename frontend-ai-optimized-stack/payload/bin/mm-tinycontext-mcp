@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+command -v uvx >/dev/null 2>&1 || {
+  echo 'mm-tinycontext-mcp: uvx is required. Install uv first.' >&2
+  exit 127
+}
+RESOLVER="$(dirname "$(readlink -f "$0")")/mm-tinycontext-path"
+[[ -x "$RESOLVER" ]] || { echo 'mm-tinycontext-mcp: missing shared path resolver.' >&2; exit 1; }
+DATA_ROOT="${XDG_DATA_HOME:-$HOME/.local/share}/tinycontext"
+DB="$($RESOLVER db)"
+MODEL_DIR="$DATA_ROOT/models"
+mkdir -p "$(dirname "$DB")" "$MODEL_DIR"
+export TINYCONTEXT_MEMORY_DB_PATH="$DB"
+export TINYCONTEXT_MODELS_DIR="$MODEL_DIR"
+export TINYCONTEXT_RECALL_TOP_K="${TINYCONTEXT_RECALL_TOP_K:-5}"
+export TINYCONTEXT_RECALL_MAX_TOKENS="${TINYCONTEXT_RECALL_MAX_TOKENS:-600}"
+export TINYCONTEXT_PROFILE_MAX_TOKENS="${TINYCONTEXT_PROFILE_MAX_TOKENS:-120}"
+
+# Both CLIs launch this exact same runtime; refresh its uvx package metadata
+# once per day rather than emitting anything on stdout before MCP handshake.
+CACHE_ROOT="${XDG_CACHE_HOME:-$HOME/.cache}/mm-agent-runtime"
+STAMP="$CACHE_ROOT/tinycontext-refresh.stamp"
+mkdir -p "$CACHE_ROOT"
+refresh=0
+if [[ ! -e "$STAMP" ]]; then
+  refresh=1
+elif find "$STAMP" -mmin +1440 -print -quit 2>/dev/null | grep -q .; then
+  refresh=1
+fi
+base=(--python 3.12 --from 'tinysuite-context[server]')
+if [[ "$refresh" -eq 1 ]]; then
+  set +e
+  uvx --refresh-package tinysuite-context "${base[@]}" tinycontext
+  status=$?
+  set -e
+  if [[ "$status" -eq 0 ]]; then touch "$STAMP"; fi
+  exit "$status"
+fi
+exec uvx "${base[@]}" tinycontext

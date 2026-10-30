@@ -1,0 +1,151 @@
+[
+  {
+    "label": "Web · Dev Server",
+    "command": "$HOME/.local/bin/zed-dev",
+    "args": [
+      "web",
+      "dev"
+    ],
+    "use_new_terminal": true,
+    "reveal": "always",
+    "save": "all"
+  },
+  {
+    "label": "Web · Build",
+    "command": "$HOME/.local/bin/zed-dev",
+    "args": [
+      "web",
+      "build"
+    ],
+    "use_new_terminal": true,
+    "reveal": "always",
+    "save": "all"
+  },
+  {
+    "label": "Web · Lint",
+    "command": "$HOME/.local/bin/zed-dev",
+    "args": [
+      "web",
+      "lint"
+    ],
+    "use_new_terminal": true,
+    "reveal": "always",
+    "save": "all"
+  },
+  {
+    "label": "Web · Typecheck / Astro Check",
+    "command": "$HOME/.local/bin/zed-dev",
+    "args": [
+      "web",
+      "typecheck"
+    ],
+    "use_new_terminal": true,
+    "reveal": "always",
+    "save": "all"
+  },
+  {
+    "label": "Web · Test",
+    "command": "$HOME/.local/bin/zed-dev",
+    "args": [
+      "web",
+      "test"
+    ],
+    "use_new_terminal": true,
+    "reveal": "always",
+    "save": "all"
+  },
+  {
+    "label": "Web · Format Check",
+    "command": "$HOME/.local/bin/zed-dev",
+    "args": [
+      "web",
+      "format-check"
+    ],
+    "use_new_terminal": true,
+    "reveal": "always",
+    "save": "all"
+  },
+  {
+    "label": "Defold · Bob Build",
+    "command": "$HOME/.local/bin/zed-dev",
+    "args": [
+      "defold",
+      "build"
+    ],
+    "use_new_terminal": true,
+    "reveal": "always",
+    "save": "all"
+  },
+  {
+    "label": "Defold · Bob HTML5 Bundle",
+    "command": "$HOME/.local/bin/zed-dev",
+    "args": [
+      "defold",
+      "bundle-html5"
+    ],
+    "use_new_terminal": true,
+    "reveal": "always",
+    "save": "all"
+  },
+  {
+    "label": "Defold · Bob Linux Bundle",
+    "command": "$HOME/.local/bin/zed-dev",
+    "args": [
+      "defold",
+      "bundle-linux"
+    ],
+    "use_new_terminal": true,
+    "reveal": "always",
+    "save": "all"
+  },
+  {
+    "label": "Agent · Claude Code (existing CLI/cswap)",
+    "command": "$HOME/.local/bin/zed-dev",
+    "args": [
+      "agent",
+      "claude"
+    ],
+    "use_new_terminal": true,
+    "reveal": "always"
+  },
+  {
+    "label": "Agent · Codex (direct, no rotation)",
+    "command": "$HOME/.local/bin/zed-dev",
+    "args": [
+      "agent",
+      "codex"
+    ],
+    "use_new_terminal": true,
+    "reveal": "always"
+  },
+  {
+    "label": "Agent · YOLO working (OMP)",
+    "command": "$HOME/.local/bin/zed-dev",
+    "args": [
+      "agent",
+      "yolo-working"
+    ],
+    "use_new_terminal": true,
+    "reveal": "always"
+  },
+  {
+    "label": "Agent · YOLO private (OMP)",
+    "command": "$HOME/.local/bin/zed-dev",
+    "args": [
+      "agent",
+      "yolo-private"
+    ],
+    "use_new_terminal": true,
+    "reveal": "always"
+  },
+  {
+    "label": "Delta · Open collaboration app (optional)",
+    "command": "$HOME/.local/bin/zed-dev",
+    "args": [
+      "delta",
+      "open"
+    ],
+    "use_new_terminal": true,
+    "reveal": "never"
+  }
+]

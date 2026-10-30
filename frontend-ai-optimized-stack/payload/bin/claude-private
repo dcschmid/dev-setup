@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+command -v claude >/dev/null 2>&1 || { echo 'claude-private: Claude Code CLI not found.' >&2; exit 127; }
+export MM_AGENT_PROFILE=private
+# Bind the MCP memory to the project where the CLI was launched, even if
+# an agent/subprocess later changes its working directory.
+export MM_TINYCONTEXT_PROJECT_ROOT="${MM_TINYCONTEXT_PROJECT_ROOT:-$PWD}"
+mm-profile-skills-sync claude private --quiet
+
+# Private Claude accounts use the normal Claude credential store so claude-swap
+# can rotate the active login while a Linux Claude Code chat remains open.
+if command -v cswap >/dev/null 2>&1; then
+  strategy="${MM_CLAUDE_PRIVATE_STRATEGY:-best}"
+  # Disabled accounts (notably the Working account) are skipped by cswap.
+  cswap switch --strategy "$strategy" >/dev/null 2>&1 || true
+fi
+MCP_JSON="${MM_STACK_DATA_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/frontend-ai-stack}/mcp/private-blender.json"
+[[ -f "$MCP_JSON" ]] || { echo 'claude-private: Blender config missing; run ./setup-global-mcps.sh' >&2; exit 1; }
+exec claude --mcp-config "$MCP_JSON" "$@"

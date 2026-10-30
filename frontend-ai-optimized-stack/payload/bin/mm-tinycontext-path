@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+"""Stable TinyContext project identity shared by Claude/Codex and Git worktrees.
+
+No network, client credentials, DB writes, or imports outside the standard library.
+"""
+import argparse
+import hashlib
+import os
+from pathlib import Path
+import subprocess
+
+
+def git(path: Path, *args: str) -> str | None:
+    try:
+        p = subprocess.run(['git', '-C', str(path), *args],
+                           check=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                           text=True, timeout=5)
+        return p.stdout.strip() or None
+    except (FileNotFoundError, subprocess.SubprocessError):
+        return None
+
+
+def identity(path: Path) -> Path:
+    """Return the primary working-tree root when all worktrees share a .git dir.
+
+    For ordinary git clones this equals git rev-parse --show-toplevel and
+    preserves the v3.12.2 DB key. Other git layouts fall back to that root.
+    """
+    repo = git(path, 'rev-parse', '--show-toplevel')
+    if not repo:
+        return path
+    root = Path(repo).resolve()
+    common = git(path, 'rev-parse', '--path-format=absolute', '--git-common-dir')
+    if common:
+        common_dir = Path(common).resolve()
+        if common_dir.name == '.git' and common_dir.is_dir():
+            return common_dir.parent
+    return root
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description='Resolve shared Claude/Codex TinyContext project storage')
+    ap.add_argument('action', nargs='?', choices=['info', 'db', 'key', 'root'], default='info')
+    ap.add_argument('--profile', choices=['working', 'private'], default=os.getenv('MM_AGENT_PROFILE', 'private'))
+    ap.add_argument('--project', default=os.getenv('MM_TINYCONTEXT_PROJECT_ROOT', os.getcwd()))
+    args = ap.parse_args()
+    if args.profile not in ('private', 'working'):
+        ap.error('MM_AGENT_PROFILE must be working or private')
+    path = Path(args.project).expanduser().resolve()
+    if not path.is_dir():
+        ap.error(f'not a project directory: {path}')
+    root = identity(path)
+    key = hashlib.sha256(str(root).encode()).hexdigest()[:16]
+    data = Path(os.getenv('XDG_DATA_HOME', str(Path.home() / '.local/share'))).expanduser()
+    db = data / 'tinycontext' / ('projects' if args.profile == 'private' else 'projects-working') / (key + '.db')
+    if args.action == 'db':
+        print(db)
+    elif args.action == 'root':
+        print(root)
+    elif args.action == 'key':
+        print(key)
+    else:
+        print(f'profile={args.profile}\nproject_root={root}\nproject_hash={key}\ndatabase={db}\nshared_clients=claude,codex\ndatabase_exists={"yes" if db.is_file() else "no (created on first use)"}')
+
+
+if __name__ == '__main__':
+    main()

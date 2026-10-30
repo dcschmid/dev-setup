@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -u
+printf 'Codex manual authentication · Frontend Stack v3.13.0\n'
+command -v codex >/dev/null && echo 'PASS  Codex CLI installed' || echo 'WARN  Codex CLI missing'
+for name in codex-working codex-private; do
+  path="$HOME/.local/bin/$name"
+  if [[ -x "$path" ]] && ! grep -Eq 'codex-switch run|cxswap auto|cxswap switch' "$path"; then
+    echo "PASS  $name: direct CLI, no automatic rotation"
+  else echo "FAIL  $name: unexpected managed switch or missing launcher"; fi
+done
+if command -v systemctl >/dev/null && systemctl --user is-active --quiet codex-swap-auto.service 2>/dev/null; then
+  echo 'FAIL  Legacy codex-swap-auto.service is still active'
+else echo 'PASS  Legacy Codex auto-rotation service inactive'; fi
+printf '%s\n' 'INFO  Working CODEX_HOME: ~/.local/share/frontend-ai-stack/codex-working-home (separate login)' 'INFO  Private CODEX_HOME: ~/.codex (existing login)' 'INFO  To change a Codex account, use native codex login; no automatic changes.'

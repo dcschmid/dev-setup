@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+# Zed daily development helpers. No provider credentials or MCP config is touched.
+set -euo pipefail
+
+fail() { printf 'zed-dev: %s\n' "$*" >&2; exit 2; }
+usage() {
+  cat <<'HELP'
+Usage:
+  zed-dev agent claude|codex|yolo-working|yolo-private
+  zed-dev web dev|build|lint|typecheck|test|format-check
+  zed-dev defold build|bundle-html5|bundle-linux
+  zed-dev delta open
+
+The agent commands use your existing interactive zsh startup configuration.
+The web commands run existing project package.json scripts; no dependencies are installed.
+The Defold commands need BOB_JAR or ~/.config/zed-devkit/bob.path.
+HELP
+}
+
+[[ $# -ge 2 ]] || { usage; exit 2; }
+kind=$1; action=$2
+
+# Zed started from the desktop may not inherit nvm/Corepack/direnv/Java settings
+# from the user's interactive zsh. Re-enter once through interactive zsh for
+# project tasks, without changing ~/.zshrc or forcing any global environment.
+if [[ "$kind" == web || "$kind" == defold ]] && [[ ${ZED_DEVKIT_SHELL_READY:-0} != 1 ]] && command -v zsh >/dev/null 2>&1; then
+  export ZED_DEVKIT_SHELL_READY=1
+  export ZED_DEVKIT_HELPER="$0" ZED_DEVKIT_KIND="$kind" ZED_DEVKIT_ACTION="$action"
+  exec zsh -ic 'exec "$ZED_DEVKIT_HELPER" "$ZED_DEVKIT_KIND" "$ZED_DEVKIT_ACTION"'
+fi
+
+case "$kind" in
+  delta)
+    [[ $# -eq 2 && "$action" == "open" ]] || fail 'Use: zed-dev delta open'
+    command -v delta >/dev/null 2>&1 || fail 'Delta not found. See docs/DELTA.md (optional install).'
+    # Delta by Zed Industries is distinct from git-delta, the Git diff pager.
+    [[ -d "$HOME/.local/delta.app" ]] || fail 'Official Delta app not found in ~/.local/delta.app (possible git-delta name collision). See docs/DELTA.md.'
+    exec delta open
+    ;;
+  agent)
+    [[ $# -eq 2 ]] || fail 'No extra arguments accepted for agent launchers'
+    case "$action" in
+      claude|codex|yolo-working|yolo-private) ;;
+      *) fail 'Unknown agent. Use claude, codex, yolo-working, yolo-private.' ;;
+    esac
+    command -v zsh >/dev/null 2>&1 || fail 'zsh not found; existing shell aliases/profiles require zsh'
+    # Intentionally run the user's interactive zsh so that existing aliases,
+    # functions, profile isolation, and cswap wrapper are preserved.
+    # No eval or shell interpolation from untrusted arguments: allowlist above.
+    exec zsh -ic "if ! whence -w '$action' >/dev/null 2>&1; then print -u2 'Launcher $action not found in interactive zsh'; exit 127; fi; $action"
+    ;;
+  web)
+    case "$action" in dev|build|lint|typecheck|test|format-check) ;; *) fail "Unknown web command: $action" ;; esac
+    [[ $# -eq 2 ]] || fail 'Unexpected extra web arguments'
+    command -v python3 >/dev/null || fail 'python3 required for package.json script detection'
+    current=$PWD
+    # In monorepos prefer the nearest package.json for the active editor file
+    # (as long as it belongs to the current worktree).
+    root=${ZED_WORKTREE_ROOT:-$PWD}
+    if [[ -n ${ZED_FILE:-} && -f ${ZED_FILE:-} ]]; then
+      search_dir=$(dirname "$ZED_FILE")
+      while [[ "$search_dir" == "$root" || "$search_dir" == "$root/"* ]]; do
+        if [[ -f "$search_dir/package.json" ]]; then current=$search_dir; break; fi
+        [[ "$search_dir" == "$root" ]] && break
+        search_dir=$(dirname "$search_dir")
+      done
+    fi
+    [[ -f "$current/package.json" ]] || { [[ -f "$root/package.json" ]] && current=$root; }
+    [[ -f "$current/package.json" ]] || fail "No package.json under $current; open a package root or select a file in the package"
+    cd "$current"
+    script_exists() {
+      python3 - "$1" <<'PY'
+import json,sys
+try:
+    with open('package.json', encoding='utf-8') as f: p=json.load(f)
+    sys.exit(0 if sys.argv[1] in p.get('scripts',{}) else 1)
+except (OSError,ValueError): sys.exit(1)
+PY
+    }
+    manager=$(python3 - <<'PY'
+import json
+try:
+    with open('package.json', encoding='utf-8') as f: x=json.load(f)
+    print(str(x.get('packageManager','')).split('@')[0].split('+')[0])
+except (OSError,ValueError): print('')
+PY
+)
+    case "$manager" in
+      npm|pnpm|yarn|bun) ;;
+      *) if [[ -f pnpm-lock.yaml ]]; then manager=pnpm
+         elif [[ -f yarn.lock ]]; then manager=yarn
+         elif [[ -f bun.lock || -f bun.lockb ]]; then manager=bun
+         else manager=npm; fi ;;
+    esac
+    command -v "$manager" >/dev/null 2>&1 || fail "$manager missing; activate the project's Node tooling/Corepack in zsh before launching Zed"
+    target=$action
+    if [[ $action == typecheck ]]; then
+      if script_exists typecheck; then target=typecheck
+      elif script_exists type-check; then target=type-check
+      elif script_exists check; then target=check
+      else fail 'No typecheck/type-check/check script. Configure it in package.json (Astro: astro check, Next: tsc --noEmit).'; fi
+    elif [[ $action == format-check ]]; then
+      if script_exists format:check; then target=format:check
+      elif script_exists format-check; then target=format-check
+      else fail 'No format:check/format-check script in package.json'; fi
+    fi
+    script_exists "$target" || fail "No '$target' script in $current/package.json"
+    printf 'zed-dev: %s run %s (in %s)\n' "$manager" "$target" "$PWD"
+    exec "$manager" run "$target"
+    ;;
+  defold)
+    [[ $# -eq 2 ]] || fail 'Unexpected extra Defold arguments'
+    [[ -f game.project ]] || fail "game.project not found in $PWD; open the Defold project root"
+    jar=${BOB_JAR:-}
+    if [[ -z "$jar" && -s ${XDG_CONFIG_HOME:-$HOME/.config}/zed-devkit/bob.path ]]; then
+      IFS= read -r jar < "${XDG_CONFIG_HOME:-$HOME/.config}/zed-devkit/bob.path" || true
+    fi
+    [[ -n "$jar" && -f "$jar" ]] || fail 'bob.jar not found. Set BOB_JAR or put its absolute path into ~/.config/zed-devkit/bob.path'
+    command -v java >/dev/null 2>&1 || fail 'Java missing; consult Defold Bob requirements (currently OpenJDK 25)'
+    case "$action" in
+      build) exec java -jar "$jar" resolve build ;;
+      bundle-html5) exec java -jar "$jar" --archive --platform js-web resolve build bundle ;;
+      bundle-linux) exec java -jar "$jar" --archive --platform x86_64-linux resolve build bundle ;;
+      *) fail "Unknown Defold command: $action" ;;
+    esac
+    ;;
+  *) usage; exit 2 ;;
+esac

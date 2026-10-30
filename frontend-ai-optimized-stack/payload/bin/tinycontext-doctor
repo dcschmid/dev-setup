@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+command -v uvx >/dev/null 2>&1 || { echo 'tinycontext-doctor: uvx is required.' >&2; exit 127; }
+DIR="$(dirname "$(readlink -f "$0")")"
+DATA_ROOT="${XDG_DATA_HOME:-$HOME/.local/share}/tinycontext"
+DB="$($DIR/mm-tinycontext-path db)"
+mkdir -p "$(dirname "$DB")" "$DATA_ROOT/models"
+export TINYCONTEXT_MEMORY_DB_PATH="$DB"
+export TINYCONTEXT_MODELS_DIR="$DATA_ROOT/models"
+export TINYCONTEXT_RECALL_TOP_K="${TINYCONTEXT_RECALL_TOP_K:-5}"
+export TINYCONTEXT_RECALL_MAX_TOKENS="${TINYCONTEXT_RECALL_MAX_TOKENS:-600}"
+export TINYCONTEXT_PROFILE_MAX_TOKENS="${TINYCONTEXT_PROFILE_MAX_TOKENS:-120}"
+args=(--python 3.12 --from 'tinysuite-context[server]')
+update=0
+if [[ "${1:-}" == '--update' ]]; then args=(--refresh-package tinysuite-context "${args[@]}"); update=1; fi
+set +e
+uvx "${args[@]}" tinycontext doctor
+status=$?
+set -e
+if [[ "$status" -eq 0 && "$update" -eq 1 ]]; then
+  cache="${XDG_CACHE_HOME:-$HOME/.cache}/mm-agent-runtime"
+  mkdir -p "$cache"
+  touch "$cache/tinycontext-refresh.stamp"
+fi
+exit "$status"

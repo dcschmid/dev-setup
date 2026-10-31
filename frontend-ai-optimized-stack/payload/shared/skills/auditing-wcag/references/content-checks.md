@@ -1,0 +1,37 @@
+# Content Checks
+
+Checks that depend on content quality and availability. Validate presence and adequacy of alternatives such as captions and transcripts. When the "Fail rule" column says **Judgment lines**, judge with a11y-knowledge `criteria/<number>.md`.
+
+## Non-text Content
+| Criterion | Check | Evidence | Fail rule |
+|---|---|---|---|
+| 1.1.1 | Alt text quality for images | image list + alt text | [Judgment lines](../../a11y-knowledge/references/criteria/1.1.1.md) |
+
+> **Note:** Automated checks verify presence of alt text. Content review evaluates whether the alt text adequately describes the image content and purpose.
+
+## Multimedia
+| Criterion | Check | Evidence | Fail rule |
+|---|---|---|---|
+| 1.2.1 | Alternatives for audio-only/video-only | links/notes | No alternative provided |
+| 1.2.2 | Captions for prerecorded video | screenshot | [Judgment lines](../../a11y-knowledge/references/criteria/1.2.2.md) |
+| 1.2.3 | Media alternative (audio description or text) | links/notes | No alternative |
+| 1.2.4 | Live captions provided | capture | No live captions |
+| 1.2.5 | Audio description provided | capture | No audio description |
+
+## Sensory Characteristics
+| Criterion | Check | Evidence | Fail rule |
+|---|---|---|---|
+| 1.3.3 | Instructions not relying on sensory cues | excerpts | [Judgment lines](../../a11y-knowledge/references/criteria/1.3.3.md) |
+
+## Audio
+| Criterion | Check | Evidence | Fail rule |
+|---|---|---|---|
+| 1.4.2 | Auto-play audio can be stopped/controlled | logs | [Judgment lines](../../a11y-knowledge/references/criteria/1.4.2.md) |
+
+> **Tip:** The `auto-play-detection` check detects auto-playing visual content via screenshot comparison and also measures the playback state of `<audio>` / `<video>` (whether it is muted, plays for more than 3 seconds, and has visible `controls`) as `a11y-skills/auto-play-audio`. Verify manually that sound is actually heard and that any pause/mute control found works. See [interactive-checks.md](./interactive-checks.md#auto-play-detection) for details.
+> Run via: `npx -y @a11y-skills/audit --url "<url>" --checks auto-play-detection`
+
+## Navigation
+| Criterion | Check | Evidence | Fail rule |
+|---|---|---|---|
+| 2.4.5 | Multiple ways to reach content (search/site map) | capture | Only one way provided |

@@ -117,5 +117,5 @@ for b in "$BACKUP/state/bin/"*; do
   name="$(basename "$b")"; name="${name%.__MISSING__}"
   restore "$HOME/.local/bin/$name" "bin/$name"
 done
-echo "PASS: v3.14.0 installer rollback restored from $BACKUP"
+echo "PASS: v3.15.0 installer rollback restored from $BACKUP"
 echo 'Note: this rollback does not restore Zed Delta or its plugin automatically (see docs/ZED_DELTA_REMOVAL.md), modify logins, remove OMP, or undo the optional ~/.zshrc PATH snippet.'

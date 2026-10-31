@@ -123,7 +123,7 @@ printf 'CUSTOM\n' > "$T/home/.codex/skills/user-owned/SKILL.md"
 export HOME="$T/home" XDG_CONFIG_HOME="$T/home/.config" PATH="$T/home/.local/bin:$T/mockbin:/usr/bin:/bin"
 "$ROOT/install-profiles.sh" > "$T/install-output"
 "$ROOT/verify-profiles.sh" > "$T/verify-output" || { cat "$T/verify-output"; exit 1; }
-grep -q 'VERIFICATION_PASS v3.14.0' "$T/verify-output"
+grep -q 'VERIFICATION_PASS v3.15.0' "$T/verify-output"
 grep -q 'disable --now codex-swap-auto.service' "$HOME/systemctl-called"
 [[ ! -f "$HOME/cxswap-service-active" ]]
 [[ "$(cat "$HOME/.codex/auth.json")" == AUTH_SENTINEL ]]

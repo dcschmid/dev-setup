@@ -1,11 +1,12 @@
-# Frontend AI Optimized Stack v3.14.0 — Fedora 44 · Manual Codex · YOLO-Auto OMP Profiles
+# Frontend AI Optimized Stack v3.15.0 — Fedora 44 · Manual Codex · YOLO-Auto OMP Profiles
 
-## Maintenance and profile policy (v3.14.0)
+## Maintenance and profile policy (v3.15.0)
 
 - OMP settings survive the client's YAML save cycle; existing per-profile browser/computer choices are retained. Python needs PyYAML (`python3-pyyaml` on Fedora).
 - Profile rules are delivered through Codex `AGENTS.md` and appended Claude/OMP system prompts. User and repository instructions take precedence.
 - Working Codex uses an independent config with only the common MCPs inherited at migration. Its login remains separate. Working Claude uses common global MCPs plus project registrations, excluding known Private integrations. Add additional Working-only Codex MCPs to its own config explicitly.
-- Shared skills now include CI triage, PR/MR review follow-up and Playwright browser automation. The general game-engineering skill incorporates the former gamedev-core workflow.
+- Shared skills now include CI triage, PR/MR review follow-up, Playwright browser automation and a stack-maintenance guide. The general game-engineering skill incorporates the former gamedev-core workflow.
+- Accessibility suite (Private and Working): the `masuP9/a11y-specialist-skills` set — `a11y-knowledge`, `reviewing-a11y`, `auditing-wcag`, `planning-wcag-audit`, `planning-a11y-improvement`, `implementing-a11y` (WCAG 2.2 + WAI-ARIA APG, English only, MIT, per-skill provenance) — plus `mm-screenreader-a11y` for screen reader and keyboard testing. Live page checks use the stack's `mm-playwright` launcher (ARIA snapshots, Tab-walk, focus management); the screen reader skill pairs that with a manual NVDA/Orca/VoiceOver checklist.
 - `mm-skill-audit --strict --plugins --profile both` validates YAML metadata, installed asset drift and symlinked skills. Plugin cache files are labeled separately from active capabilities.
 - `mm-project-memory-doctor` verifies Claude, the selected Codex home and OMP against the shared profile/project memory launcher.
 

@@ -1,0 +1,15 @@
+This skill includes material derived from the masuP9/a11y-specialist-skills repository.
+
+Source:
+- Repository: https://github.com/masuP9/a11y-specialist-skills
+- Path: skills/a11y-knowledge
+- Commit: 4e37b67bb4e709c5ac7bfd5cfb4c6c9d3d0fb71b
+
+Copyright (c) 2025 masuP9.
+
+Licensed under the MIT License. See LICENSE.txt in this directory.
+
+Modifications:
+- English only; Japanese .ja.md files and links removed.
+- Playwright MCP tool references replaced with the stack's mm-playwright CLI launcher.
+- Browser tooling note added for the stack launcher.

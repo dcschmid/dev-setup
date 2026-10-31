@@ -22,6 +22,11 @@ jobs:
           python3 kitty-terminal-setup/tests.py
           python3 -m unittest discover -s zed-editor-setup/tests
           python3 -m unittest discover -s frontend-ai-optimized-stack/tests -p 'test_*.py'
+      - name: Skill metadata (offline)
+        run: |
+          python3 frontend-ai-optimized-stack/payload/bin/mm-skill-audit \
+            --source frontend-ai-optimized-stack \
+            --profile both --client all --no-drift --strict
       - name: Offline profile and migration smoke tests
         run: |
           for test_script in frontend-ai-optimized-stack/tests/*smoke.sh; do

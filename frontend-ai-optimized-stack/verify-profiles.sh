@@ -6,7 +6,7 @@ info(){ printf 'INFO  %-43s %s\n' "$1" "${2:-}"; }
 bad(){ printf 'FAIL  %-43s %s\n' "$1" "${2:-}"; failed+=("$1${2:+: $2}"); }
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STACK_ROOT="${MM_STACK_DATA_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/frontend-ai-stack}"
-echo 'Frontend AI Optimized Stack v3.14.0 verification'
+echo 'Frontend AI Optimized Stack v3.15.0 verification'
 python3 "$ROOT/scripts/check_blender_scope.py" >/dev/null 2>&1 && pass 'No globally visible Blender MCP' || bad 'No globally visible Blender MCP' 'See docs/GLOBAL_MCPS.md'
 for c in python3 uvx; do
   command -v "$c" >/dev/null 2>&1 && pass "dependency $c" || bad "dependency $c" 'missing'
@@ -68,6 +68,6 @@ if command -v codex >/dev/null 2>&1 && command -v claude >/dev/null 2>&1; then
 fi
 "$HOME/.local/bin/mm-profile-runtime" check >/dev/null 2>&1 && pass 'Profile rules and Working MCP boundary' || bad 'Profile rules and Working MCP boundary' 'run mm-profile-runtime check'
 if (( ${#failed[@]} )); then
-  echo; echo 'VERIFICATION_FAIL v3.14.0'; printf ' - %s\n' "${failed[@]}"; exit 1
+  echo; echo 'VERIFICATION_FAIL v3.15.0'; printf ' - %s\n' "${failed[@]}"; exit 1
 fi
-echo; echo 'VERIFICATION_PASS v3.14.0'
+echo; echo 'VERIFICATION_PASS v3.15.0'

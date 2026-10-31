@@ -1,0 +1,10 @@
+{
+  "source": "https://github.com/masuP9/a11y-specialist-skills/tree/4e37b67bb4e709c5ac7bfd5cfb4c6c9d3d0fb71b/skills/reviewing-a11y",
+  "commit": "4e37b67bb4e709c5ac7bfd5cfb4c6c9d3d0fb71b",
+  "adaptations": [
+    "English only (Japanese .ja.md files and links removed)",
+    "allowed-tools: Playwright MCP tools replaced with Bash (stack mm-playwright launcher)",
+    "Browser tooling note added pointing at the stack mm-playwright launcher",
+    "Repo-facing README.md not bundled"
+  ]
+}

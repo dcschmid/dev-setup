@@ -35,13 +35,27 @@ def main():
     parser.add_argument('--client', choices=['codex', 'claude', 'omp', 'all'], default='all')
     parser.add_argument('--plugins', action='store_true', help='Also inspect cached plugin files; caching does not establish activation')
     parser.add_argument('--strict', action='store_true', help='Fail for invalid metadata, conflicts or owned installation drift')
+    parser.add_argument('--no-drift', action='store_true', help='Skip owned installation drift checks (offline/CI metadata validation)')
     parser.add_argument('--json', action='store_true')
-    parser.add_argument('--source', type=Path, help='Stack source directory used for owned-file drift checks')
+    parser.add_argument('--source', type=Path, help='Stack source directory used for owned-file drift checks and offline payload fallback')
     args = parser.parse_args()
     home = Path.home()
     profiles = ['private', 'working'] if args.profile == 'both' else [args.profile]
     groups = ['shared'] + profiles + (['omp'] if args.client in ('omp', 'all') else [])
-    roots = [(f'package/{group}', STACK / 'skills' / group) for group in groups]
+    source = args.source
+    marker = STACK / 'source-root'
+    if source is None and marker.exists():
+        source = Path(marker.read_text().strip())
+    # Prefer the installed store; fall back to the source payload so metadata
+    # can be validated offline (CI) where no profile is installed.
+    roots = []
+    for group in groups:
+        installed = STACK / 'skills' / group
+        payload = (source / 'payload' / group / 'skills') if source else None
+        if installed.is_dir():
+            roots.append((f'package/{group}', installed))
+        elif payload is not None and payload.is_dir():
+            roots.append((f'package/{group}', payload))
     result = subprocess.run(['git', 'rev-parse', '--show-toplevel'], capture_output=True, text=True)
     cwd = Path.cwd().resolve()
     repo = Path(result.stdout.strip()) if result.returncode == 0 else cwd
@@ -100,17 +114,14 @@ def main():
             row = {'origin': origin, 'path': str(path), 'name': name, 'issues': issues, 'info': info}
             rows.append(row)
             problems.extend(f'{path}: {issue}' for issue in issues)
-    source = args.source
-    marker = STACK / 'source-root'
-    if source is None and marker.exists():
-        source = Path(marker.read_text().strip())
-    if source and (source / 'payload').is_dir():
-        candidates = [(p, STACK / 'skills' / group / p.relative_to(source / 'payload' / group / 'skills'))
-                      for group in groups for p in (source / 'payload' / group / 'skills').rglob('*') if p.is_file()]
-        candidates += [(p, home / '.local/bin' / p.name) for p in (source / 'payload/bin').iterdir() if p.is_file()]
-        for src, installed in candidates:
-            if not installed.is_file() or src.read_bytes() != installed.read_bytes():
-                problems.append(f'owned installation drift: {installed}')
+    if not args.no_drift:
+        if source and (source / 'payload').is_dir():
+            candidates = [(p, STACK / 'skills' / group / p.relative_to(source / 'payload' / group / 'skills'))
+                          for group in groups for p in (source / 'payload' / group / 'skills').rglob('*') if p.is_file()]
+            candidates += [(p, home / '.local/bin' / p.name) for p in (source / 'payload/bin').iterdir() if p.is_file()]
+            for src, installed in candidates:
+                if not installed.is_file() or src.read_bytes() != installed.read_bytes():
+                    problems.append(f'owned installation drift: {installed}')
     capabilities = {name: bool(shutil.which(name)) for name in ('gh', 'glab', 'semgrep', 'mm-playwright', 'shellcheck')}
     report = {'profile': args.profile, 'client': args.client, 'skills': rows, 'problems': problems, 'capabilities': capabilities}
     if args.json:

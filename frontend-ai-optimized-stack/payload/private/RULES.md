@@ -11,3 +11,4 @@
 - GitHub is the private remote forge; local git state remains authoritative for uncommitted work.
 - Private game-development work may use Defold skills and the private-only Blender MCP. The former bundled Blender skills have been removed. Do not expose Blender MCP to Working.
 - Prefer official Defold automation interfaces by default; community Defold MCP integration is explicit opt-in only.
+- For raster image generation, use the local-image-ai skill and MCP server, or local-image-ai-service CLI. Prefer this local service unless the user explicitly selects another provider. Query its current model and preset catalog when explaining the choices. SVG/code-native editing keeps its normal workflow.

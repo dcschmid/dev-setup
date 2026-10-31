@@ -39,6 +39,32 @@ See the repository's [setup review](../SETUP-REVIEW-2026-10-30.md) for the origi
 - No installation of codex-switch or cxswap, and **no Codex auto-switch service**. Both old tools and their login stores are preserved for optional manual cleanup later.
 - The existing Claude `cswap` rotation is unchanged.
 
+### Local image generation in Private
+
+The Private profile includes the portable `local-image-ai` skill and prefers the
+[Local Image AI Service](https://github.com/dcschmid/local-image-ai-service) for
+raster image requests unless the user explicitly chooses another provider.
+Agents query the service for current model IDs, guided presets, examples and
+settings, then queue images and export the completed PNGs into the project.
+The same workflow supports the JSON CLI when MCP is unavailable.
+
+The stack supplies the skill and profile rule. Install the service/runtime and
+register its stdio MCP launcher separately using the
+[Codex, Claude Code and OMP setup guide](https://github.com/dcschmid/local-image-ai-service/blob/main/docs/agents-integration.md).
+Claude uses a user-scope MCP registration; OMP uses its native Private
+`agent/mcp.json`. The skill links are resolved by the existing profile tooling:
+
+```bash
+mm-profile-skills-sync claude private --quiet
+mm-profile-skills-sync omp private --quiet
+```
+
+The local service does not change OMP's YOLO-Auto model/provider configuration.
+Working uses its separate skills and scoped MCP configuration. Restart a client
+session after adding the skill or MCP server. The
+[current model/preset reference](payload/private/skills/local-image-ai/references/catalog.md)
+is a bundled snapshot; live service discovery remains authoritative.
+
 ## Upgrade from v3.12.5 (or v3.12.4)
 
 ```bash

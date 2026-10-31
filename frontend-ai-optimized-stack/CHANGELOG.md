@@ -5,7 +5,7 @@
 - Add `mm-stack-maintenance`, a shared skill documenting how to verify, update, repair and roll back the installed stack using its own tooling (`verify-profiles.sh`, `mm-skill-audit`, `mm-project-memory-doctor`, `mm-stack-update`, `rollback-profiles.sh`).
 - Remove the redundant `mm-playwright-firefox` skill; its policy is already covered by the vendored `playwright` skill and `mm-omp-code-workflow`. The vendored `playwright` skill is unchanged.
 - Make `mm-skill-audit` usable offline: `--no-drift` skips installed-store drift checks, and package roots fall back to the source `payload/` when no store is installed.
-- Add a CI step that validates all bundled skill metadata (frontmatter, name/description, size, conflicts) offline via `mm-skill-audit --no-drift --strict`.
+- Remove the GitHub Actions workflow; the stack is validated locally with the documented commands (unit tests, smoke suites, `mm-skill-audit`, checksum manifests, ShellCheck).
 - Import the `masuP9/a11y-specialist-skills` suite (WCAG 2.2 + WAI-ARIA APG) as six shared skills for Private and Working: `a11y-knowledge`, `reviewing-a11y`, `auditing-wcag`, `planning-wcag-audit`, `planning-a11y-improvement`, `implementing-a11y`. English only; Playwright MCP tool references adapted to the stack's `mm-playwright` launcher; per-skill MIT provenance recorded.
 - Add `mm-screenreader-a11y`, a shared skill for screen reader and keyboard accessibility testing: automated ARIA-snapshot and keyboard passes via `mm-playwright`, plus a manual NVDA/Orca/VoiceOver checklist.
 

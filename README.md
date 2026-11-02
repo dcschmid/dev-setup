@@ -7,6 +7,7 @@ Personal, locally run development setup for a **Framework Laptop 16 on Fedora 44
 | [`frontend-ai-optimized-stack/`](frontend-ai-optimized-stack/) | Three coding agents (Claude Code, Codex CLI, YOLO-Auto via Oh My Pi) as **working** and **private** profiles, with shared TinySearch/TinyContext and a private Blender MCP. |
 | [`kitty-terminal-setup/`](kitty-terminal-setup/) | A lean Kitty/Zsh workspace: Catppuccin Mocha, Powerline tabs, persistent session state with rotating backups, and a curated toolset (fzf, zoxide, direnv, Atuin, eza, bat, delta, lazygit). |
 | [`zed-editor-setup/`](zed-editor-setup/) | A small, safe Zed editor configuration for Astro/Next.js/TypeScript/Defold, with ACP/terminal agent tasks. |
+| [`ssh-setup/`](ssh-setup/) | GitHub/GitLab SSH and commit signing with four separate Ed25519 keys (auth + signing per provider), path-based Git identities, and local signature verification. |
 
 ## Layout
 
@@ -14,7 +15,8 @@ Personal, locally run development setup for a **Framework Laptop 16 on Fedora 44
 dev-setup/
 ├── frontend-ai-optimized-stack/   # agent profiles, MCPs, skills, OMP workflows
 ├── kitty-terminal-setup/          # Kitty + Zsh workspace pack
-└── zed-editor-setup/              # Zed editor devkit
+├── zed-editor-setup/              # Zed editor devkit
+└── ssh-setup/                     # GitHub/GitLab SSH + commit signing
 ```
 
 Each package is independent — install only what you need.
@@ -34,6 +36,7 @@ Pick a package and follow its README:
 - [`frontend-ai-optimized-stack/README.md`](frontend-ai-optimized-stack/README.md)
 - [`kitty-terminal-setup/README.md`](kitty-terminal-setup/README.md)
 - [`zed-editor-setup/README.md`](zed-editor-setup/README.md)
+- [`ssh-setup/README.md`](ssh-setup/README.md)
 
 ## Notes
 

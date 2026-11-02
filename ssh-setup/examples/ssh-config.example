@@ -1,0 +1,17 @@
+# Included in ~/.ssh/config, preferably BEFORE other host rules:
+Include ~/.ssh/config.framework-git
+
+# Contents of ~/.ssh/config.framework-git:
+Host github.com
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_ed25519_github
+  IdentitiesOnly yes
+  AddKeysToAgent yes
+
+Host gitlab.com
+  HostName gitlab.com
+  User git
+  IdentityFile ~/.ssh/id_ed25519_gitlab
+  IdentitiesOnly yes
+  AddKeysToAgent yes

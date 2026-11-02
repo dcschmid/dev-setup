@@ -1,0 +1,21 @@
+# Git config excerpt (placeholders — do not use as-is)
+[gpg]
+    format = ssh
+[gpg "ssh"]
+    allowedSignersFile = /home/YOUR_USER/.ssh/allowed_signers
+[commit]
+    gpgsign = true
+[tag]
+    gpgsign = true
+[user]
+    useConfigOnly = true
+[includeIf "gitdir:~/dev/github/"]
+    path = /home/YOUR_USER/.gitconfig-github
+[includeIf "gitdir:~/dev/gitlab/"]
+    path = /home/YOUR_USER/.gitconfig-gitlab
+
+# ~/.gitconfig-github
+# [user]
+#   name = YOUR_NAME
+#   email = YOUR_GITHUB_EMAIL
+#   signingkey = /home/YOUR_USER/.ssh/id_ed25519_github_signing.pub

@@ -48,6 +48,13 @@ Agents query the service for current model IDs, guided presets, examples and
 settings, then queue images and export the completed PNGs into the project.
 The same workflow supports the JSON CLI when MCP is unavailable.
 
+The skill also covers Low Poly and Pixel Art concept sheets, Voxel Art concepts,
+and seven consistent orthographic views from an existing GLB model. The model-view
+workflow runs in a separate Blender CPU process and exports the rendered mesh,
+PNGs and a camera/hash manifest; pixel exports share one palette and voxel exports
+include a derived cube mesh. Use CLI `assets` commands or the MCP asset-view tools.
+See the [asset workflow and verification](https://github.com/dcschmid/local-image-ai-service/blob/main/docs/asset-views.md).
+
 The stack supplies the skill and profile rule. Install the service/runtime and
 register its stdio MCP launcher separately using the
 [Codex, Claude Code and OMP setup guide](https://github.com/dcschmid/local-image-ai-service/blob/main/docs/agents-integration.md).

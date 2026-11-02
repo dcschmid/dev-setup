@@ -2,9 +2,9 @@
   "name": "local-image-ai",
   "version": 1,
   "files": {
-    "SKILL.md": "322018a9ae9424bd1376fd02d24858bc74c03134d967928c78cc9c41007673c5",
+    "SKILL.md": "40852fdabc21ffde1e53e6bee5b71b13be90702eb5d8d8c6aec299e8862e9ea1",
     "agents/openai.yaml": "f1160167bf1a8bb68286165d252ad844cc43d99fc1005f69a6aabfd413ae98af",
-    "references/workflow.md": "3911b8e51f52c2a3e47e74f7c4e9aab7dfe67532597ff5c203bea5185f929428",
-    "references/catalog.md": "4cd684b0c96cdb6bd10a0b2882e5e8e56cfa3da89dd23479d58792cb1c7fee72"
+    "references/workflow.md": "a13da3963b641b4fb103d9dce40b09d243eac7156c818e94a7e1efa0151f6005",
+    "references/catalog.md": "42a02d76442884480b8cbeb8e058e298b4fbffc87600cdaad1629550938936cd"
   }
 }

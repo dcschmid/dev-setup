@@ -12,7 +12,7 @@ python3 "$ROOT/scripts/migrate_global_blender.py" --apply
 python3 "$ROOT/scripts/check_blender_scope.py"
 MODE="${MM_BLENDER_INSTALL_MODE:-auto}"
 APP="${MM_BLENDER_FLATPAK_APP_ID:-org.blender.Blender}"
-VERSION="2.2.0"
+VERSION="2.2.7"
 ADDON="${MM_BLENDER_INSTALL_ADDON:-1}"
 if [[ "$ADDON" != 1 ]]; then
   echo 'INFO: Blender addon step skipped (MM_BLENDER_INSTALL_ADDON=0).'; exit 0

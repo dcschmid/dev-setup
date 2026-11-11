@@ -1,4 +1,4 @@
-# Frontend AI Optimized Stack v3.15.0 — Fedora 44 · Manual Codex · YOLO-Auto OMP Profiles
+# Frontend AI Optimized Stack v3.15.1 — Fedora 44 · Manual Codex · YOLO-Auto OMP Profiles
 
 ## Maintenance and profile policy (v3.15.0)
 
@@ -34,7 +34,7 @@ See the repository's [setup review](../SETUP-REVIEW-2026-10-30.md) for the origi
 
 - **TinySearch** and **TinyContext** for all three agents in both profiles.
 - Claude, Codex and OMP use **the same TinyContext project database** for the same Git repository **and the same profile**. Git worktrees share the database.
-- Private Blender MCP `mcp-for-blender@2.2.0` remains available to all three private launchers; **never Working**.
+- Private Blender MCP `mcp-for-blender@2.2.7` remains available to all three private launchers; **never Working**.
 - The two old managed Blender **skills** are removed: `mm-blender-asset-pipeline`, `mm-blender-defold-handoff`. The Blender MCP and its addon are not removed.
 - No installation of codex-switch or cxswap, and **no Codex auto-switch service**. Both old tools and their login stores are preserved for optional manual cleanup later.
 - The existing Claude `cswap` rotation is unchanged.

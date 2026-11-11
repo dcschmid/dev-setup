@@ -2,7 +2,7 @@
 
 The scope boundary is **Claude/Codex Working vs Private**, not "all tools everywhere".
 
-| Agent profile | TinySearch | TinyContext (`mm-tinycontext`) | Blender MCP 2.2.0 |
+| Agent profile | TinySearch | TinyContext (`mm-tinycontext`) | Blender MCP 2.2.7 |
 |---|---|---|---|
 | `claude-working` | yes | yes (Working DB) | **no** |
 | `claude-private` | yes | yes (Private DB) | **yes**, via `--mcp-config` |
@@ -66,7 +66,7 @@ review `.mcp.json` and `.codex/config.toml` if the agents disagree.
 **Blender must not be registered globally** (for example `claude mcp add --scope user blender ...` or `codex mcp add blender ...`) because this would also expose Blender tools to Working. This package now handles the common v3.12.2 failure safely:
 
 1. `./install-profiles.sh` first validates the existing user configs.
-2. Only entries named `blender` that run the known `uvx mcp-for-blender@2.2.0` server are eligible for automatic migration; both original user config files are saved first.
+2. Only entries named `blender` that run the known `uvx mcp-for-blender@2.2.0` (legacy) or `@2.2.7` (current) server are eligible for automatic migration; both original user config files are saved first.
 3. Only that one Blender MCP is removed from the global tables. All unrelated MCP registrations and authentication files remain untouched.
 4. The private launcher overlay is generated and the shared TinySuite MCPs are registered after the stack helpers are installed.
 
@@ -108,7 +108,7 @@ The Blender add-on is separate:
 ./setup-private-gamedev-mcp.sh
 ```
 
-If Blender is a Flatpak, the helper installs the `mcp-for-blender@2.2.0` add-on into the detected Blender profile. Blender uses localhost `127.0.0.1:9876`; `BLENDER_MCP_SAFE_MODE=1` and telemetry disabled are set in the private MCP definitions. This scope division controls **which CLI sessions receive tools**, not OS-level isolation of a local socket: any local program with socket access may be able to connect.
+If Blender is a Flatpak, the helper installs the `mcp-for-blender@2.2.7` add-on into the detected Blender profile. Blender uses localhost `127.0.0.1:9876`; `BLENDER_MCP_SAFE_MODE=1` and telemetry disabled are set in the private MCP definitions. This scope division controls **which CLI sessions receive tools**, not OS-level isolation of a local socket: any local program with socket access may be able to connect.
 
 ## Verify actual session tools
 

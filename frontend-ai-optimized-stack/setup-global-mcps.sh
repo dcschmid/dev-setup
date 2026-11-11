@@ -60,7 +60,7 @@ if [[ "$mode" != '--check' ]]; then
 import json,sys
 from pathlib import Path
 out={'mcpServers':{'blender':{'command':sys.argv[2],
- 'args':['mcp-for-blender@2.2.0'],
+ 'args':['mcp-for-blender@2.2.7'],
  'env':{'BLENDER_HOST':'127.0.0.1','BLENDER_PORT':'9876','BLENDER_MCP_SAFE_MODE':'1','DISABLE_TELEMETRY':'true'}}}}
 Path(sys.argv[1]).write_text(json.dumps(out,indent=2)+'\n')
 BLENDER_JSON_PY
@@ -70,7 +70,7 @@ import json,sys
 from pathlib import Path
 try: server=json.loads(Path(sys.argv[1]).read_text())['mcpServers']['blender']
 except (OSError, ValueError, KeyError, TypeError): sys.exit('FAIL private Blender config missing')
-assert server['command']==sys.argv[2] and server['args']==['mcp-for-blender@2.2.0']
+assert server['command']==sys.argv[2] and server['args']==['mcp-for-blender@2.2.7']
 assert server['env'].get('BLENDER_HOST')=='127.0.0.1' and server['env'].get('BLENDER_MCP_SAFE_MODE')=='1'
 print('PASS Blender configured for private launcher only')
 VERIFY_JSON_PY

@@ -123,7 +123,7 @@ printf 'CUSTOM\n' > "$T/home/.codex/skills/user-owned/SKILL.md"
 export HOME="$T/home" XDG_CONFIG_HOME="$T/home/.config" PATH="$T/home/.local/bin:$T/mockbin:/usr/bin:/bin"
 "$ROOT/install-profiles.sh" > "$T/install-output"
 "$ROOT/verify-profiles.sh" > "$T/verify-output" || { cat "$T/verify-output"; exit 1; }
-grep -q 'VERIFICATION_PASS v3.15.0' "$T/verify-output"
+grep -q 'VERIFICATION_PASS v3.15.1' "$T/verify-output"
 grep -q 'disable --now codex-swap-auto.service' "$HOME/systemctl-called"
 [[ ! -f "$HOME/cxswap-service-active" ]]
 [[ "$(cat "$HOME/.codex/auth.json")" == AUTH_SENTINEL ]]
@@ -145,7 +145,7 @@ import json,sys
 from pathlib import Path
 h=Path(sys.argv[1]);w=json.loads((h/'.omp/profiles/working/agent/mcp.json').read_text());p=json.loads((h/'.omp/profiles/private/agent/mcp.json').read_text())
 assert 'blender' not in w['mcpServers'] and 'blender' in w['disabledServers']
-assert 'blender' in p['mcpServers'] and p['mcpServers']['blender']['args']==['mcp-for-blender@2.2.0']
+assert 'blender' in p['mcpServers'] and p['mcpServers']['blender']['args']==['mcp-for-blender@2.2.7']
 assert w['mcpServers']['mm-tinycontext']==p['mcpServers']['mm-tinycontext']
 assert w['mcpServers']['tinysearch']==p['mcpServers']['tinysearch']
 PYTH

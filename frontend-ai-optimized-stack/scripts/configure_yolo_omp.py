@@ -8,6 +8,8 @@ import sys
 from pathlib import Path
 
 MODEL = 'yolo-auto/qwen3.8-27b'
+# Earlier Blender MCP pins this stack wrote itself; an entry that equals the current one except for such a pin is upgraded in place.
+PREVIOUS_BLENDER_PINS = ('mcp-for-blender@2.2.0',)
 SAFE_CONFIG = f'''# Managed baseline: keep work/private MCP + skills isolated.
 # OMP otherwise imports Claude/Codex user and project capabilities.
 disabledProviders:
@@ -62,7 +64,7 @@ def run(check, preflight=False):
             'mm-tinycontext': {'command': str(memory), 'args': []},
         }
         if profile == 'private':
-            desired['blender'] = {'command': uvx, 'args': ['mcp-for-blender@2.2.0'], 'env': {
+            desired['blender'] = {'command': uvx, 'args': ['mcp-for-blender@2.2.7'], 'env': {
                 'BLENDER_HOST': '127.0.0.1', 'BLENDER_PORT': '9876', 'BLENDER_MCP_SAFE_MODE': '1', 'DISABLE_TELEMETRY': 'true'}}
         if mcp.exists():
             try:
@@ -76,6 +78,9 @@ def run(check, preflight=False):
         new = json.loads(json.dumps(old))
         for name, node in desired.items():
             existing = new['mcpServers'].get(name)
+            if name == 'blender' and existing is not None and existing != node and any(existing == {**node, 'args': [pin]} for pin in PREVIOUS_BLENDER_PINS):
+                new['mcpServers'][name] = node  # known previous pin of this stack: upgrade, keep everything else
+                continue
             if existing is not None and existing != node:
                 fail(f'{mcp}: existing {name} differs; will not overwrite your server')
             new['mcpServers'][name] = node

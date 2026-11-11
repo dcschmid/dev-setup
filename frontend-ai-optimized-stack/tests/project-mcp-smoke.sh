@@ -64,7 +64,7 @@ chmod +x "$TMP/mockbin/uvx" "$TMP/mockbin/flatpak"
 HOME="$TMP/home" UVX_LOG="$TMP/uvx.log" PATH="$TMP/mockbin:$PATH" \
   "$ROOT/setup-private-gamedev-mcp.sh" "$TMP/repo" > "$TMP/blender.out"
 EXPECTED="$TMP/home/.var/app/org.blender.Blender/config/blender/5.2/scripts/addons"
-grep -Fq "$EXPECTED|--python 3.11 mcp-for-blender@2.2.0 install-addon" "$TMP/uvx.log"
+grep -Fq "$EXPECTED|--python 3.11 mcp-for-blender@2.2.7 install-addon" "$TMP/uvx.log"
 [[ -d "$EXPECTED" ]]
 # Existing project MCP configuration must stay intact; no implicit migration.
 grep -q 'old-blender' "$TMP/repo/.mcp.json"
@@ -89,4 +89,4 @@ except ImportError:
 tomllib.loads(Path(sys.argv[2]).read_text())
 PY
 
-echo 'PASS project MCP helpers keep project config, install private Blender 2.2.0 addon, preserve Defold/Storybook, valid JSON/TOML'
+echo 'PASS project MCP helpers keep project config, install private Blender 2.2.7 addon, preserve Defold/Storybook, valid JSON/TOML'

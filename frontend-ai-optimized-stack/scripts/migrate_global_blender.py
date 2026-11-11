@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Migrate ONLY a recognized global Blender 2.2.0 stdio MCP registration.
+"""Migrate ONLY a recognized global Blender 2.2.0 or 2.2.7 stdio MCP registration.
 
 Claude and Codex user configs may also contain credentials / unrelated settings.
 Never dump them, never modify unknown Blender configs and make on-disk backups
@@ -24,6 +24,8 @@ MCP_BLENDER = re.compile(r'^mcp_servers\.(?:"blender"|blender)(?:\.|$)')
 SUPPORTED_ARGS = (
     ['mcp-for-blender@2.2.0'],
     ['--python', '3.11', 'mcp-for-blender@2.2.0'],
+    ['mcp-for-blender@2.2.7'],
+    ['--python', '3.11', 'mcp-for-blender@2.2.7'],
 )
 
 
@@ -55,7 +57,7 @@ def clause_json(path: Path):
     if 'blender' not in servers:
         return None
     if not recognized(servers['blender']):
-        raise ValueError(f'{path}: Blender server is not a recognized uvx mcp-for-blender@2.2.0 registration; leave unchanged and review manually')
+        raise ValueError(f'{path}: Blender server is not a recognized uvx mcp-for-blender@2.2.0/@2.2.7 registration; leave unchanged and review manually')
     del servers['blender']
     return json.dumps(obj, indent=2, ensure_ascii=False) + '\n'
 
@@ -71,7 +73,7 @@ def codex_toml(path: Path):
     if 'blender' not in servers:
         return None
     if not recognized(servers['blender']):
-        raise ValueError(f'{path}: Blender server is not a recognized uvx mcp-for-blender@2.2.0 registration; leave unchanged and review manually')
+        raise ValueError(f'{path}: Blender server is not a recognized uvx mcp-for-blender@2.2.0/@2.2.7 registration; leave unchanged and review manually')
     # Remove only dedicated [mcp_servers.blender] tables and their subsections.
     # An inline table or dynamically constructed config is deliberately rejected.
     output, dropping, found = [], False, False

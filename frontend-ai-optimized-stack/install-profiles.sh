@@ -5,7 +5,7 @@ umask 077
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 command -v python3 >/dev/null || { echo 'ERROR: python3 missing.' >&2; exit 1; }
 python3 -c 'import yaml' 2>/dev/null || { echo 'ERROR: PyYAML missing (Fedora: python3-pyyaml).' >&2; exit 1; }
-# Validate first, before changing user files. Known v2.2.0 global Blender
+# Validate first, before changing user files. Known v2.2.0/v2.2.7 global Blender
 # registrations will be snapshotted and migrated to the private-only overlay.
 # Unknown custom registrations fail safely and are never touched.
 python3 "$ROOT/scripts/migrate_global_blender.py" --preflight
@@ -17,7 +17,7 @@ if command -v uvx >/dev/null 2>&1; then "$ROOT/setup-yolo-omp.sh" --preflight; f
 "$ROOT/setup-omp-cli.sh" --install
 STACK_ROOT="${MM_STACK_DATA_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/frontend-ai-stack}"
 STAMP="$(date +%Y%m%d-%H%M%S)-$$"
-BACKUP="$HOME/.frontend-ai-stack-backups/${STAMP}-v3.15.0-omp-delta-cleanup"
+BACKUP="$HOME/.frontend-ai-stack-backups/${STAMP}-v3.15.1-omp-delta-cleanup"
 mkdir -p "$BACKUP/state" "$HOME/.local/bin"
 # All runtime credentials and existing Oh My Pi installations are left untouched.
 # The only migrated user files are stack-owned bins, two managed MCP settings and skill links.
@@ -155,10 +155,10 @@ fi
 # The cleaning helper creates private, recoverable backups and intentionally
 # never touches Zed editor binaries or unrelated Delta MCP products.
 if ! python3 "$ROOT/scripts/cleanup_zed_delta.py" --apply --backup-dir "$BACKUP/zed-delta"; then
-  echo 'WARN: v3.15.0 stack installed, but Zed Delta cleanup needs attention. See docs/ZED_DELTA_REMOVAL.md' >&2
+  echo 'WARN: v3.15.1 stack installed, but Zed Delta cleanup needs attention. See docs/ZED_DELTA_REMOVAL.md' >&2
 fi
 printf '
-PASS: v3.15.0 stack files installed. Backup: %s
+PASS: v3.15.1 stack files installed. Backup: %s
 '  "$BACKUP"
 echo 'Important: no credentials were copied, imported, overwritten or exported.'
 echo 'NEXT: OMP CLI verified. Run ./setup-omp-completions.sh --install (optional), then omp-working or omp-private and /login yolo-auto.'

@@ -32,7 +32,7 @@ The stack installs a `config.yml` per profile with `disabledProviders` covering
 `claude`, `codex`, `gemini`, `opencode` to prevent importing unrelated tool-user
 skills/MCPs. Working `mcp.json` additionally has `disabledServers: ["blender"]`
 so an inherited same-name Blender server from a project cannot be selected.
-Private's `mcp.json` registers Blender MCP v2.2.0 plus TinySuite.
+Private's `mcp.json` registers Blender MCP v2.2.7 plus TinySuite (an existing `@2.2.0` entry written by this stack is upgraded in place).
 
 These settings are only the **agent discovery surface**. They do not create
 separate OS users or physically isolate all project files. OMP will still read

@@ -1,20 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Runs once per recognized pin (the legacy @2.2.0 and the current @2.2.7) unless BLENDER_PIN is given.
+if [[ -z "${BLENDER_PIN:-}" ]]; then for pin in 2.2.0 2.2.7; do BLENDER_PIN=$pin bash "$0"; done; exit 0; fi
+PIN="$BLENDER_PIN"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
 export HOME="$T/home"
 mkdir -p "$HOME/.codex"
-cat > "$HOME/.claude.json" <<'JSON'
-{"model":"keep","mcpServers":{"blender":{"command":"/usr/bin/uvx","args":["mcp-for-blender@2.2.0"],"env":{"BLENDER_MCP_SAFE_MODE":"1"}},"custom":{"command":"bash","args":["-lc","hello"]}}}
+cat > "$HOME/.claude.json" <<JSON
+{"model":"keep","mcpServers":{"blender":{"command":"/usr/bin/uvx","args":["mcp-for-blender@${PIN}"],"env":{"BLENDER_MCP_SAFE_MODE":"1"}},"custom":{"command":"bash","args":["-lc","hello"]}}}
 JSON
-cat > "$HOME/.codex/config.toml" <<'TOML'
+cat > "$HOME/.codex/config.toml" <<TOML
 model = "keep"
 [mcp_servers."custom"]
 command = "bash"
 args = ["-lc", "hello"]
 [mcp_servers.blender]
 command = "uvx"
-args = ["mcp-for-blender@2.2.0"]
+args = ["mcp-for-blender@${PIN}"]
 enabled = true
 [mcp_servers.blender.env]
 BLENDER_HOST = "127.0.0.1"
@@ -43,7 +46,7 @@ find "$HOME/.frontend-ai-stack-backups" -name claude.json -type f | grep -q .
 find "$HOME/.frontend-ai-stack-backups" -name codex-config.toml -type f | grep -q .
 python3 "$ROOT/scripts/migrate_global_blender.py" --apply | grep -q 'no global Blender'
 # Unrecognized entries must NEVER be touched, even when --apply is passed.
-cat > "$HOME/.claude.json" <<'JSON'
+cat > "$HOME/.claude.json" <<JSON
 {"mcpServers":{"blender":{"command":"bash","args":["custom-blender-server"]}}}
 JSON
 cp "$HOME/.claude.json" "$T/unknown-before"

@@ -16,8 +16,8 @@ caad3869a4b750e543831649ad7147b185f259751308ad58efad3daafc266ec6  ./examples/wor
 a032f00f33acfa77b90781e37d5f040dc9e85e60adfc2b00d12a4bc68789e833  ./install-profiles.sh
 92951481289a1b883b7cb7faa5dd4501049278bc51c73ce296c7e61d6a77a60f  ./install-working-upstream-skills.sh
 df395dadc6eaab862f23b08ba3bfaf191d725fa6eef46365489b05d421f98b66  ./legacy-hashes.sha256
-634659cf71e7d975cb5ae15345cb02058d85952337007892614c45cbbb5b55ba  ./payload/bin/claude-private
-45e0b61293fc65f93bc4264b166edf3cb86d420b905a12bfba52b649530385db  ./payload/bin/claude-working
+09a9e4f7d52618299bef448a60b262940465b19e69bc1326e9c01a68b1b22cca  ./payload/bin/claude-private
+40be43e2e9882fccae84bd7eb8cd457d2be94a107fe39d2896485055a67c07e1  ./payload/bin/claude-working
 1322d7b3b4e9d3d7205adb8af98abefb9a0be6115e90822dde4e9aa4c3d25ba7  ./payload/bin/codex-private
 86b90436dd1a1e8911e153c70fa5002b549b2854d2a86e0b3fd1be11176a81a1  ./payload/bin/codex-working
 0d2cd1439d111b5174a97bf01eff38288585e8a480b7df93c95050b4c85c7302  ./payload/bin/mm-agent-runtime-doctor

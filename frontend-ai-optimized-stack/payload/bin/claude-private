@@ -6,6 +6,11 @@ export MM_AGENT_PROFILE=private
 # an agent/subprocess later changes its working directory.
 export MM_TINYCONTEXT_PROJECT_ROOT="${MM_TINYCONTEXT_PROJECT_ROOT:-$PWD}"
 mm-profile-skills-sync claude private --quiet
+# Mirror the scoped skillset repo skills into Claude's shared root (best-effort;
+# missing repo or installer must never block a Claude session).
+SKILLSET_REPO="${MM_SKILLSET_REPO:-$HOME/dev/github/skillset}"
+[[ -x "$SKILLSET_REPO/tools/install-skills.sh" ]] \
+  && bash "$SKILLSET_REPO/tools/install-skills.sh" --claude private >/dev/null || true
 
 # Private Claude accounts use the normal Claude credential store so claude-swap
 # can rotate the active login while a Linux Claude Code chat remains open.

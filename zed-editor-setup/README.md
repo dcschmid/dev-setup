@@ -1,8 +1,21 @@
 # Zed Framework Devkit 1.0.0
 
-**Fedora 44 / Framework Laptop 16 · Astro · Next.js/React · TypeScript · Defold/Lua · Claude Code · Codex · YOLO-Auto**
+Fedora 44 / Framework Laptop 16 · Astro · Next.js/React · TypeScript · Defold/Lua · Claude Code · Codex · YOLO-Auto
 
-A deliberately small and safe Zed setup for everyday development. The package **configures the editor** instead of building a second toolchain or a second agent stack alongside your existing setup. It is **not a full offline installer for Zed or extensions**.
+A deliberately small and safe Zed setup for everyday development. The package configures the editor instead of building a second toolchain or a second agent stack alongside your existing setup. It is not a full offline installer for Zed or extensions.
+
+## Install from this repository
+
+```bash
+cd ~/dev/github/dev-setup/zed-editor-setup
+./install.sh --dry-run
+./install.sh
+./scripts/check.sh
+```
+
+This assumes Zed is already installed. Use `./install.sh --install-zed` if you
+want the package to fetch and run the official Zed installer when needed.
+The archive workflow below is an alternative to using a Git checkout.
 
 ## Quick install
 
@@ -14,9 +27,9 @@ cd zed-framework-devkit-v1.0.0
 ./scripts/check.sh                # Diagnostics
 ```
 
-If Zed is already installed, `./install.sh` alone (without `--install-zed`) is enough. **Do not run with `sudo`.** Alternatively, install Zed manually via [the official Linux guide](https://zed.dev/docs/installation). `--install-zed` downloads the official installation script over HTTPS into a temporary file and executes it; if you want to inspect third-party scripts before running them, install Zed manually beforehand.
+If Zed is already installed, `./install.sh` alone (without `--install-zed`) is enough. Do not run with `sudo`. Alternatively, install Zed manually via [the official Linux guide](https://zed.dev/docs/installation). `--install-zed` downloads the official installation script over HTTPS into a temporary file and executes it; if you want to inspect third-party scripts before running them, install Zed manually beforehand.
 
-**After installation:** restart Zed. Zed fetches the extensions listed in `auto_install_extensions` on its own. `Ctrl+Shift+P` → `task: spawn` opens the ready-made tasks. For Claude and Codex you can additionally run `zed: acp registry` and enable both in the ACP agent panel. API keys and logins stay with the respective agents.
+After installation: restart Zed. Zed fetches the extensions listed in `auto_install_extensions` on its own. `Ctrl+Shift+P` → `task: spawn` opens the ready-made tasks. For Claude and Codex you can run `zed: acp registry` and enable both in the ACP agent panel. API keys and logins stay with the respective agents.
 
 ## What gets configured
 
@@ -25,45 +38,92 @@ If Zed is already installed, `./install.sh` alone (without `--install-zed`) is e
 | Look | Catppuccin Mocha Dark + Catppuccin-Mocha-Icons, JetBrains Mono (if present) |
 | Editor | VSCode keybindings, 2 spaces Web, 4 spaces Lua, inlay hints, inline diagnostics, Git Blame |
 | Frontend | Astro extension/LSP, native TS/TSX/JS support, Tailwind (incl. Astro classes), HTML/Emmet, SCSS, TOML, Dockerfile |
-| Formatting | Save formats Web files; Lua/Defold is **not** reformatted without asking |
+| Formatting | Save formats Web files; Lua/Defold is not reformatted without asking |
 | Project tasks | Dev server, build, lint, typecheck/Astro check, test, format check, Bob build and bundles |
-| Agents | Claude/Codex via ACP **or** terminal; YOLO-Auto (`yolo-working`/`yolo-private`) via terminal/tasks |
+| Agents | Claude/Codex via ACP or terminal; YOLO-Auto (`yolo-working`/`yolo-private`) via terminal/tasks |
 | Safety | Existing Zed configs are merged and backed up beforehand; other tools are left untouched |
 
 No system-wide Node modules, no Ollama, no duplication of TinySearch/TinyContext, no changes to cswap, OMP, Codex, Git, SSH, Kitty, Blender, Defold, or project repositories.
 
 ## Architecture of the three agents
 
-**Claude Code:** Available in the Zed agent panel as *Claude Agent* from `zed: acp registry`. For your already `cswap`-managed Claude CLI behavior, start the Zed task **Agent · Claude Code (existing CLI/cswap)** or a terminal thread and type `claude`. **ACP and CLI are not guaranteed to be identical during account rotation**; use the CLI for the previous cswap logic.
+Claude Code: Available in the Zed agent panel as *Claude Agent* from `zed: acp registry`. For your already `cswap`-managed Claude CLI behavior, start the Zed task Agent · Claude Code (existing CLI/cswap) or a terminal thread and type `claude`. ACP and CLI are not guaranteed to be identical during account rotation; use the CLI for the previous cswap logic.
 
-**Codex:** As *Codex* from the ACP registry or via **Agent · Codex (direct, no rotation)**. The task deliberately starts only `codex`, without cxswap/codex-switch/account rotation.
+Codex: As *Codex* from the ACP registry or via Agent · Codex (direct, no rotation). The task deliberately starts only `codex`, without cxswap/codex-switch/account rotation.
 
-**YOLO-Auto:** The Devkit does not install a second OMP or Qwen. The tasks **Agent · YOLO working (OMP)** and **Agent · YOLO private (OMP)** run the **already existing** `yolo-working` and `yolo-private` launchers from the interactive zsh. Prerequisite: the launchers are actually available in your stack under those names. If a launcher has a different name, adjust `scripts/zed-dev` and the Zed tasks accordingly. Alternatively, call your existing launcher manually in a terminal thread.
+YOLO-Auto: The Devkit does not install a second OMP or Qwen. The tasks Agent · YOLO working (OMP) and Agent · YOLO private (OMP) run the already existing `yolo-working` and `yolo-private` launchers from the interactive zsh. Prerequisite: the launchers are actually available in your stack under those names. If a launcher has a different name, adjust `scripts/zed-dev` and the Zed tasks accordingly. Alternatively, call your existing launcher manually in a terminal thread.
 
-**MCP/Skills:** TinySearch and TinyContext stay in the existing Claude/Codex/OMP configurations. Zed ACP can additionally provide MCPs depending on the integration; the setup deliberately adds **no** `context_servers` entry to avoid double registration. Blender MCP stays, as you have it set up, only in the private profile. Zed agent profiles and external agent profiles are separate things.
+MCP/Skills: TinySearch and TinyContext stay in the existing Claude/Codex/OMP configurations. Zed ACP can provide MCPs depending on the integration; the setup deliberately adds no `context_servers` entry to avoid double registration. Blender MCP stays, as you have it set up, only in the private profile. Zed agent profiles and external agent profiles are separate things.
+
+## Use profile skills from Zed
+
+For the stack-managed profile workflow, open the repository in Zed and start a
+named launcher in the integrated terminal:
+
+```bash
+cd ~/dev/github/dev-setup
+codex-private
+# Alternatives: claude-private or omp-private
+```
+
+For a work checkout:
+
+```bash
+cd ~/dev/gitlab/unified-frontend
+claude-working
+# Alternatives: codex-working or omp-working
+```
+
+Then enter the request in the agent conversation:
+
+```text
+Use project-memory to recall the decisions relevant to this repository.
+Inspect the current code before relying on the checkpoint.
+```
+
+For a Working UI task with the required integrations available:
+
+```text
+Use mm-figma-source-of-truth and mm-storybook-workflow to implement this view.
+Reuse Code Connect components and existing stories. Explain missing states
+before inventing new component variants.
+```
+
+The Claude and Codex Devkit tasks run plain `claude` and `codex`; they do not
+select `-working` or `-private` stack wrappers. Choose a named wrapper manually
+when profile selection matters. The YOLO tasks already use `yolo-working` and
+`yolo-private`.
+
+ACP panel agents have their own integration and capability discovery. Check
+which skills and MCP tools the active ACP agent actually sees; terminal profile
+settings are not proof that ACP has the same configuration. Installing a skill
+in one client also does not install it in every other client.
+
+See [Using skills across clients](../frontend-ai-optimized-stack/docs/SKILL_USAGE.md)
+for the bundled inventory, additional skill examples, precedence and diagnostics.
 
 ## The daily workflow
 
 1. Open a project: `zed /path/to/repo` (or from within Zed).
 2. Open an Astro/Next.js file, wait for Astro/TS LSP initialization. If needed, `Ctrl+Shift+P` → `task: spawn` → `Web · Dev Server`.
 3. To check, run `Web · Typecheck / Astro Check`, `Web · Lint`, `Web · Build`.
-4. Via `agent: new thread`, select an ACP agent (Claude/Codex), **or** open a terminal thread for your usual CLI tools. For YOLO working/private, use the corresponding Zed tasks.
-5. For Riff Racers, open `game.project` as the project; edit Defold scripts via the Defold extension. Build normally in the **Defold editor** or optionally via Bob tasks.
+4. Via `agent: new thread`, select an ACP agent (Claude/Codex), or open a terminal thread for your usual CLI tools. For YOLO working/private, use the corresponding Zed tasks.
+5. For Riff Racers, open `game.project` as the project; edit Defold scripts via the Defold extension. Build normally in the Defold editor or optionally via Bob tasks.
 
-The Web tasks install **no packages**. They look for `package.json`, choose npm, pnpm, yarn, or bun based on `packageManager`/lockfile, and run **only existing scripts**. In monorepos, the `package.json` closest to the active file is used where possible. If your monorepo needs its own orchestrator, adjust the local task in the repo.
+The Web tasks install no packages. They look for `package.json`, choose npm, pnpm, yarn, or bun based on `packageManager`/lockfile, and run only existing scripts. In monorepos, the `package.json` closest to the active file is used where possible. If your monorepo needs its own orchestrator, adjust the local task in the repo.
 
 ## Sign-in and extensions
 
 - `Ctrl+Shift+P` → `zed: acp registry`: install Claude Agent and Codex and perform their own logins. These two ACP installations cannot meaningfully be authenticated through our shell files.
 - `Ctrl+Shift+P` → `zed: extensions`: check whether Catppuccin, Catppuccin Icons, Astro, Defold, and Lua are installed. Extensions are requested at startup via the Zed setting and require network access.
 - `Ctrl+K`, then `Ctrl+T`: theme selection. If an extension is still missing, restart Zed or install the extension manually in the store.
-- Zed-native AI models or Zed Cloud subscriptions are **not** additionally set up or billed.
+- Zed-native AI models or Zed Cloud subscriptions are not set up or billed.
 
 ## Defold 1.14 and Lua
 
-For Defold, Lua **5.1/LuaJIT** is the smallest common denominator (HTML5 uses Lua 5.1). The Defold extension provides its own language support for Defold file types; the separate Lua extension is intended for generic `.lua` files. The optional template `config/defold.luarc.template.json` can be manually copied into a Defold project as `.luarc.json`, **only if** no project-specific LuaLS configuration exists there yet. Do not copy automatically; existing libraries/diagnostic settings could otherwise be lost.
+For Defold, Lua 5.1/LuaJIT is the smallest common denominator (HTML5 uses Lua 5.1). The Defold extension provides its own language support for Defold file types; the separate Lua extension is intended for generic `.lua` files. The optional template `config/defold.luarc.template.json` can be manually copied into a Defold project as `.luarc.json`, only if no project-specific LuaLS configuration exists there yet. Do not copy automatically; existing libraries/diagnostic settings could otherwise be lost.
 
-For Bob tasks you need a suitable `bob.jar` and Java (the current Defold Bob documentation names **OpenJDK 25**). In `~/.config/zed-devkit/bob.path`, the **absolute path** to `bob.jar` can be entered as the only line, e.g.:
+For Bob tasks you need a suitable `bob.jar` and a compatible Java installation. The package documentation records OpenJDK 25; check the requirements of your installed Bob version before choosing Java. In `~/.config/zed-devkit/bob.path`, the absolute path to `bob.jar` can be entered as the only line, e.g.:
 
 ```bash
 mkdir -p ~/.config/zed-devkit
@@ -74,15 +134,15 @@ Please adjust this example path to your existing installation. Alternatively, pr
 
 ## Maintenance, updates, and rollback
 
-- **Re-apply the Devkit:** `./install.sh` (idempotent; no further backup is created if the state is unchanged).
-- **Update Zed:** With the official script installation, Zed usually manages its updates itself; check the current state in the Zed UI.
-- **Update extensions:** Zed updates installed extensions by default at startup.
-- **Check status:** `./scripts/check.sh`.
-- **Check rollback:** `./restore.sh --dry-run`.
-- **Undo the last installation:** `./restore.sh`. The script refuses to restore if you have changed files since installation; only use `./restore.sh --force` after a deliberate check.
-- **Backups:** `~/.local/share/zed-devkit/backups/`. Contain **original configuration files** that may hold secrets; the directory is created privately (`0700`), backups (`0600`). Do not upload to public Git repositories.
-- **Uninstall Zed:** For the official script installation, `zed --uninstall`; use `./restore.sh` beforehand if needed. The Devkit never removes your existing agent stack.
+- Re-apply the Devkit: `./install.sh` (idempotent; no further backup is created if the state is unchanged).
+- Update Zed: With the official script installation, Zed usually manages its updates itself; check the current state in the Zed UI.
+- Update extensions: Zed updates installed extensions by default at startup.
+- Check status: `./scripts/check.sh`.
+- Check rollback: `./restore.sh --dry-run`.
+- Undo the last installation: `./restore.sh`. The script refuses to restore if you have changed files since installation; only use `./restore.sh --force` after a deliberate check.
+- Backups: `~/.local/share/zed-devkit/backups/`. Contain original configuration files that may hold secrets; the directory is created privately (`0700`), backups (`0600`). Do not upload to public Git repositories.
+- Uninstall Zed: For the official script installation, `zed --uninstall`; use `./restore.sh` beforehand if needed. The Devkit never removes your existing agent stack.
 
-**Note on existing Zed configs:** `settings.json` and `tasks.json` are read as JSONC (comments and trailing commas supported), **merged** with the desired recommendations, and written as regular JSON. Custom keys and other tasks are preserved, but **comments/original formatting are lost in the new file**. The unchanged original is in the backup. If your Zed configuration is managed via symlinks/dotfiles, the installer deliberately aborts: then transfer the bundled settings manually into the central dotfiles repo.
+Note on existing Zed configs: `settings.json` and `tasks.json` are read as JSONC (comments and trailing commas supported), merged with the desired recommendations, and written as regular JSON. Custom keys and other tasks are preserved, but comments/original formatting are lost in the new file. The unchanged original is in the backup. If your Zed configuration is managed via symlinks/dotfiles, the installer deliberately aborts: then transfer the bundled settings manually into the central dotfiles repo.
 
 Further notes: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/SOURCES.md](docs/SOURCES.md).

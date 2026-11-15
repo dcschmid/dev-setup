@@ -1,6 +1,6 @@
 # Kitty Workspace Pack v1.6.0 — Fedora / Framework 16
 
-A deliberately lean, locally run Kitty/Zsh setup for your **Framework Laptop 16 with Fedora 44 (KDE Plasma or GNOME on Wayland)**.
+A deliberately lean, locally run Kitty/Zsh setup for your Framework Laptop 16 with Fedora 44 (KDE Plasma or GNOME on Wayland).
 
 ## What appears at startup
 
@@ -11,11 +11,27 @@ Unified Frontend 1    ~/dev/gitlab/unified-frontend
 Unified Frontend 2    ~/dev/gitlab/unified-frontend
 ```
 
-After that, **you** create, close, and rename your tabs and windows. Kitty restores the last saved state each time. **No old Melody-Mind project launchers or predefined OMP/DEV/TEST tabs.**
+After that, you create, close, and rename your tabs and windows. Kitty restores the last saved state each time. No old Melody-Mind project launchers or predefined OMP/DEV/TEST tabs.
 
-The visible **Kitty Workspace** launcher uses `--single-instance --instance-group=kitty-workspace` so that repeated invocations land in the same Kitty instance as much as possible (new OS windows are possible in the process). Separately started, independent Kitty processes can still store different states; use the same launcher for this workspace.
+The visible Kitty Workspace launcher uses `--single-instance --instance-group=kitty-workspace` so that repeated invocations land in the same Kitty instance as much as possible (new OS windows are possible in the process). Separately started, independent Kitty processes can still store different states; use the same launcher for this workspace.
 
-The state contains tabs, titles, directories, and window structure, **not** running shell programs (no automatic restart of `pnpm dev`, Claude, or Codex).
+The state contains tabs, titles, directories, and window structure, not running shell programs (no automatic restart of `pnpm dev`, Claude, or Codex).
+
+## Start from this repository
+
+For a Git checkout, use the package directory directly:
+
+```bash
+cd ~/dev/github/dev-setup/kitty-terminal-setup
+./install.sh --config-only
+./shell-doctor.sh
+./state-status.py
+```
+
+Choose `--config-only` when you want configuration without dependency installation
+or downloads. Use the full installer below when you also want its dependency
+prompts. Run either as your normal user; the full installer may invoke `sudo`
+for Fedora packages. Close and reopen Kitty after installation.
 
 ## Installation / upgrade
 
@@ -29,24 +45,24 @@ cd kitty-workspace-pack-v1.6.0
 ./state-status.py
 ```
 
-**Recommended if you already have almost all tools on Fedora:**
+Recommended if you already have almost all tools on Fedora:
 
 ```bash
 ./install.sh --config-only
 ```
 
-The config-only mode changes the settings managed by the package but installs **no software** and runs **no upgrades/downloads**. It leaves existing personal Kitty states untouched.
+The config-only mode changes the settings managed by the package but installs no software and runs no upgrades/downloads. It leaves existing personal Kitty states untouched.
 
-`./install.sh` asks about missing packages, installs the base via `dnf`, and does **not** update Kitty automatically. `--yes` accepts the normal missing dependencies, but **no automatic Kitty update** and no optional Lazygit.
+`./install.sh` asks about missing packages, installs the base via `dnf`, and does not update Kitty automatically. `--yes` accepts the normal missing dependencies, but no automatic Kitty update and no optional Lazygit.
 
-## Current versions and sources (October 30, 2026)
+## Recorded versions and sources (October 30, 2026)
 
 | Component | Verified | Behavior of this package |
 |---|---|---|
-| Kitty upstream | **0.49.2** | Check; no unasked update |
-| Fedora 44 Kitty RPM | **0.47.1** in the Fedora package overview | The DNF version stays the default if it is installed |
-| nvm | **v0.40.8** | Installation **only on explicit request** |
-| Atuin | Fedora 44 in the package overview: **18.12.1** | Older vs. newer init flags are taken into account |
+| Kitty upstream | 0.49.2 | Check; no unasked update |
+| Fedora 44 Kitty RPM | 0.47.1 in the Fedora package overview | The DNF version stays the default if it is installed |
+| nvm | v0.40.8 | Installation only on explicit request |
+| Atuin | Fedora 44 in the package overview: 18.12.1 | Older vs. newer init flags are taken into account |
 
 For Kitty:
 
@@ -56,14 +72,14 @@ For Kitty:
 ./update-kitty.sh --official    # explicitly install upstream into ~/.local/kitty.app
 ```
 
-The official installation is **optional**; Fedora and upstream binaries should not be swapped unnoticed.
+The official installation is optional; Fedora and upstream binaries should not be swapped unnoticed.
 
 ## Persistent state — now with backups
 
 - A session snapshot is requested roughly every 10 seconds and after relevant Kitty events.
-- Before overwriting, the new watcher script checks the generated session in a **temporary file**. An invalid snapshot does not replace the last valid one.
-- Additionally, the previous state is backed up roughly every 15 minutes; up to twelve rotating auto-backups.
-- The Quick Access kitten uses its **own Kitty configuration file without the autosave watcher**, so its short-lived terminal does not overwrite the main state.
+- Before overwriting, the new watcher script checks the generated session in a temporary file. An invalid snapshot does not replace the last valid one.
+- The previous state is backed up roughly every 15 minutes; up to twelve rotating auto-backups.
+- The Quick Access kitten uses its own Kitty configuration file without the autosave watcher, so its short-lived terminal does not overwrite the main state.
 - The log contains only error types, no session contents/commands.
 
 ```text
@@ -80,11 +96,11 @@ Check status:
 ./state-status.py
 ```
 
-**Important:** A real Kitty test on your Fedora/Wayland system is still needed; the watcher was tested here with mocks, not live on your Framework. See `PERSISTENT-STATE.md`.
+Important: A real Kitty test on your Fedora/Wayland system is still needed; the watcher was tested here with mocks, not live on your Framework. See `PERSISTENT-STATE.md`.
 
 ## Removed old startup tabs / reset
 
-If you brought over two identifiable Melody-Mind startup tabs from an old v1.5 state, **close Kitty completely**, then:
+If you brought over two identifiable Melody-Mind startup tabs from an old v1.5 state, close Kitty completely, then:
 
 ```bash
 ./migrate-kitty-state.py
@@ -92,7 +108,7 @@ If you brought over two identifiable Melody-Mind startup tabs from an old v1.5 s
 
 Nothing is changed for unclear sessions. The previous state is backed up before a successful migration.
 
-If you deliberately want to **discard all self-created tabs**, close Kitty and:
+If you deliberately want to discard all self-created tabs, close Kitty and:
 
 ```bash
 ./reset-kitty-state.sh
@@ -100,9 +116,9 @@ If you deliberately want to **discard all self-created tabs**, close Kitty and:
 
 The script backs up the old file and then resets only to the two Unified Frontend tabs.
 
-## Missing Node / pnpm from your last doctor output
+## Set up Node and pnpm
 
-Our Zsh profile activates the Oh-My-Zsh NVM plugin, **but does not install NVM, Node, or pnpm**. So that `node`, `npm`, and `pnpm` work again after a Fedora reinstall:
+Our Zsh profile activates the Oh-My-Zsh NVM plugin, but does not install NVM, Node, or pnpm. So that `node`, `npm`, and `pnpm` work again after a Fedora reinstall:
 
 ```bash
 ./setup-node.sh --check
@@ -110,13 +126,64 @@ Our Zsh profile activates the Oh-My-Zsh NVM plugin, **but does not install NVM, 
 ./setup-node.sh --install-project   # only with an existing .nvmrc, with a prompt
 ```
 
-`NODE-SETUP.md` explains the version from `.nvmrc`, `package.json`, Corepack, and pnpm. **Conda, Rust, uv, Claude, Codex, OMP (Oh My Pi), and Lazygit remain optional.** The new doctor no longer presents these as equivalent errors.
+`NODE-SETUP.md` explains the version from `.nvmrc`, `package.json`, Corepack, and pnpm. Conda, Rust, uv, Claude, Codex, OMP (Oh My Pi), and Lazygit remain optional. The new doctor no longer presents these as equivalent errors.
 
 ## Included features
 
 Kitty Catppuccin Mocha, Powerline tabs, JetBrains Mono (optional), Zsh/Oh My Zsh, Git/gitfast, safe NVM `.nvmrc` switching, fzf, zoxide, direnv, Atuin local with AI binding disabled, eza, bat, delta, optional lazygit TUI, and safe Git worktree helpers. Plus Kitty `diff`, `icat`, `choose-files`, Quick Access, and notifications for long background commands.
 
-The default shell of your Linux account is **not** changed. The package does not run agents automatically.
+The default shell of your Linux account is not changed. The package does not run agents automatically.
+
+## Use coding agents and skills in a workspace tab
+
+Kitty provides the terminal. Install the [agent stack](../frontend-ai-optimized-stack/README.md)
+separately to get the named profile launchers. Start one from the intended checkout:
+
+```bash
+cd ~/dev/github/dev-setup
+codex-private
+# Alternatives: claude-private or omp-private
+```
+
+In the agent conversation, enter a request such as:
+
+```text
+Use project-memory to recall the repository constraints relevant to this task.
+Then inspect the files I ask you to change before proposing an implementation.
+```
+
+If your additional writing skills are installed in that client, you can ask:
+
+```text
+Use documentation-technical-writing and human-writing to improve this package's
+README in English. Verify commands against the scripts and keep useful examples.
+```
+
+For work projects, change to `~/dev/gitlab/unified-frontend` and use
+`codex-working`, `claude-working` or `omp-working`. Kitty does not install skills,
+select the agent profile, or resume a previous agent process when restoring tabs.
+The [skill usage guide](../frontend-ai-optimized-stack/docs/SKILL_USAGE.md) covers
+availability, all three clients, updates and troubleshooting.
+
+## Everyday keyboard and shell examples
+
+| Action | Shortcut or command |
+|---|---|
+| Open a tab in the current directory | `Ctrl+Shift+T` |
+| Rename the current tab | `Ctrl+Space`, then `N` |
+| Save the current session layout | `Ctrl+Space`, then `S` |
+| Search shell history | `Ctrl+R` |
+| Select a file with fzf | `Ctrl+T` |
+| Select a directory with fzf | `Alt+C` |
+| List Git worktrees | `gwl` |
+| Show a Git diff through delta | `gd` |
+| Jump to a previously visited directory | `z <folder>` |
+
+Commands such as `gwl` and `gd` are supplied by the configured interactive shell.
+If they are missing, open a fresh Zsh session and run `./shell-doctor.sh`.
+Read [the full shortcut reference](KEYBOARD-SHORTCUTS.md) for the remaining keys.
+Session files record directories and layout; check them before sharing diagnostics
+if project paths are sensitive.
 
 ## Documentation guide
 
@@ -134,4 +201,4 @@ The default shell of your Linux account is **not** changed. The package does not
 ./uninstall.sh
 ```
 
-**Deliberately preserves** the personal saved session, backups, secrets, self-created sessions, tools, and the existing login shell.
+Deliberately preserves the personal saved session, backups, secrets, self-created sessions, tools, and the existing login shell.

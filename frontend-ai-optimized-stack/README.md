@@ -1,12 +1,43 @@
 # Frontend AI Optimized Stack v3.15.1 — Fedora 44 · Manual Codex · YOLO-Auto OMP Profiles
 
+This package connects three independent coding clients to profile-specific rules,
+skills and MCP tools. Use Working for company projects and Private for personal
+projects. Start the launcher inside the target checkout so skill precedence and
+project memory resolve against the right repository.
+
+## Start here
+
+From a checkout of this repository:
+
+```bash
+cd ~/dev/github/dev-setup/frontend-ai-optimized-stack
+./fedora-prerequisites.sh       # print the Fedora dependency list
+# If needed, install the listed dependencies:
+./fedora-prerequisites.sh --apply
+./install-profiles.sh
+./verify-profiles.sh
+```
+
+The installer requires Python 3 and PyYAML. The Fedora helper also lists the
+supporting command-line dependencies. Claude Code and Codex must be installed
+and authenticated separately; a missing OMP CLI is installed as described below.
+Read the remote-installer and backup notes before a full installation.
+
+For an existing stack, refresh managed skills and profile rules with
+`./install-profiles.sh --skills-only`. This requires the existing stack helpers;
+it is not a first-install shortcut. Restart agent sessions afterward.
+
+Next, read [Using skills across clients](docs/SKILL_USAGE.md). It includes the
+bundled inventory, examples for the separately installed collection, Zed and
+Kitty workflows, and commands for diagnosing missing skills.
+
 ## Maintenance and profile policy (v3.15.0)
 
 - OMP settings survive the client's YAML save cycle; existing per-profile browser/computer choices are retained. Python needs PyYAML (`python3-pyyaml` on Fedora).
 - Profile rules are delivered through Codex `AGENTS.md` and appended Claude/OMP system prompts. User and repository instructions take precedence.
 - Skills stay on demand: wrappers expose available skills without appending their bodies. Select skills for the current task, then read only required references. Discovery is not activation; automatic selection remains model judgment. Claude synchronized account stores are audited separately.
 - Working Codex uses an independent config with only the common MCPs inherited at migration. Its login remains separate. Working Claude uses common global MCPs plus project registrations, excluding known Private integrations. Add additional Working-only Codex MCPs to its own config explicitly.
-- Shared skills now include CI triage, PR/MR review follow-up, Playwright browser automation and a stack-maintenance guide.
+- The bundled shared skills are `project-memory` and `mm-stack-maintenance`. CI triage, review follow-up and browser automation skills may be available through a separately installed collection; the current payload does not bundle them.
 - `mm-skill-audit --strict --plugins --profile both` validates YAML metadata, installed asset drift and symlinked skills. Plugin cache files are labeled separately from active capabilities.
 - `mm-project-memory-doctor` verifies Claude, the selected Codex home and OMP against the shared profile/project memory launcher.
 
@@ -26,19 +57,19 @@ The optional tool installer uses pinned, SHA256-verified Linux x86_64 binaries f
 
 See the repository's [setup review](../SETUP-REVIEW-2026-10-30.md) for the original findings and implementation status.
 
-**Target:** Framework Laptop 16 / Fedora Workstation, with three separate coding agents:
+Target: Framework Laptop 16 / Fedora Workstation, with three separate coding agents:
 
 | Agent | Working | Private | Login / switching |
 |---|---|---|---|
 | Claude Code | `claude-working` | `claude-private` | Existing `cswap` setup unchanged |
-| Codex CLI | `codex-working` | `codex-private` | **Native Codex, NO automatic switching** |
+| Codex CLI | `codex-working` | `codex-private` | Native Codex, NO automatic switching |
 | YOLO-Auto via Oh My Pi | `omp-working` (`yolo-working`) | `omp-private` (`yolo-private`) | Native OMP Yolo provider, own named profiles |
 
-- **TinySearch** and **TinyContext** for all three agents in both profiles.
-- Claude, Codex and OMP use **the same TinyContext project database** for the same Git repository **and the same profile**. Git worktrees share the database.
-- Private Blender MCP `mcp-for-blender@2.2.7` remains available to all three private launchers; **never Working**.
-- The two old managed Blender **skills** are removed: `mm-blender-asset-pipeline`, `mm-blender-defold-handoff`. The Blender MCP and its addon are not removed.
-- No installation of codex-switch or cxswap, and **no Codex auto-switch service**. Both old tools and their login stores are preserved for optional manual cleanup later.
+- TinySearch and TinyContext for all three agents in both profiles.
+- Claude, Codex and OMP use the same TinyContext project database for the same Git repository and the same profile. Git worktrees share the database.
+- Private Blender MCP `mcp-for-blender@2.2.7` remains available to all three private launchers; never Working.
+- The two old managed Blender skills are removed: `mm-blender-asset-pipeline`, `mm-blender-defold-handoff`. The Blender MCP and its addon are not removed.
+- No installation of codex-switch or cxswap, and no Codex auto-switch service. Both old tools and their login stores are preserved for optional manual cleanup later.
 - The existing Claude `cswap` rotation is unchanged.
 
 ### Local image generation in Private
@@ -74,6 +105,42 @@ session after adding the skill or MCP server. The
 [current model/preset reference](payload/private/skills/local-image-ai/references/catalog.md)
 is a bundled snapshot; live service discovery remains authoritative.
 
+## Everyday use
+
+Choose one launcher after changing to the repository:
+
+```bash
+cd ~/dev/github/dev-setup
+codex-private
+# Or: claude-private
+# Or: omp-private
+```
+
+For a work checkout:
+
+```bash
+cd ~/dev/gitlab/unified-frontend
+codex-working
+# Or: claude-working
+# Or: omp-working
+```
+
+Enter skill requests in the agent conversation, not in the shell:
+
+```text
+Use mm-stack-maintenance to inspect this agent installation. Run the
+read-only diagnostics first and explain any failed checks before repairing it.
+```
+
+```text
+Use project-memory to save a short checkpoint: what is complete, what is
+unresolved, the relevant paths, and the next action. Exclude secrets and logs.
+```
+
+The same plain-language requests work across clients when the named skill is
+visible there. Client-specific menus and slash commands are separate features.
+OMP remains YOLO-Auto only; switching to another client is a deliberate user action.
+
 ## Upgrade from v3.12.5 (or v3.12.4)
 
 ```bash
@@ -83,7 +150,7 @@ is a bundled snapshot; live service discovery remains authoritative.
 ./verify-profiles.sh
 ```
 
-The installer snapshots managed assets/settings under `~/.frontend-ai-stack-backups/` with restrictive permissions. It never copies Codex `auth.json`, Claude `.credentials.json` or OMP login stores; **existing MCP/config files may themselves include secrets**, so treat backups as sensitive. Run `./rollback-profiles.sh` to undo stack-managed files; it does not restart old Codex rotation or remove OMP logins.
+The installer snapshots managed assets/settings under `~/.frontend-ai-stack-backups/` with restrictive permissions. It never copies Codex `auth.json`, Claude `.credentials.json` or OMP login stores; existing MCP/config files may themselves include secrets, so treat backups as sensitive. Run `./rollback-profiles.sh` to undo stack-managed files; it does not restart old Codex rotation or remove OMP logins.
 
 ### Codex: deliberately manual
 
@@ -96,11 +163,11 @@ codex-working login
 mm-codex-manual-doctor
 ```
 
-Working keeps a dedicated `CODEX_HOME` for history, skills and login. Private continues using the ordinary `~/.codex` home. The two Plus accounts are **not automatically rotated**. The native CLIs may need separate sign-ins; there is no automatic credential file linking or token copying.
+Working keeps a dedicated `CODEX_HOME` for history, skills and login. Private continues using the ordinary `~/.codex` home. The two Plus accounts are not automatically rotated. The native CLIs may need separate sign-ins; there is no automatic credential file linking or token copying.
 
 ### YOLO-Auto: native OMP provider
 
-**OMP CLI installs automatically** with `./install-profiles.sh` (or with
+OMP CLI installs automatically with `./install-profiles.sh` (or with
 `./setup-yolo-omp.sh` when called separately). If Oh My Pi is missing,
 `setup-omp-cli.sh` downloads and executes the official HTTPS installer using
 `--binary`; the vendor checks the binary SHA-256. Already working OMP installations
@@ -121,7 +188,7 @@ requiring Bun, system-wide packages or `sudo`. If the path was missing in Kitty,
 the installer adds a small idempotent PATH block to `~/.zshrc`; start a new shell.
 Credentials and named profiles are not changed by the OMP CLI install.
 
-Now start each profile and use the **interactive** `/login yolo-auto` command (never paste keys into a shell command stored in history):
+Now start each profile and use the interactive `/login yolo-auto` command (never paste keys into a shell command stored in history):
 
 ```bash
 omp-working
@@ -131,7 +198,7 @@ omp-private
 # inside OMP: /login yolo-auto
 ```
 
-Default model: `yolo-auto/qwen3.8-27b`; choose a different entitled model with `/model` if appropriate. **A paid Yolo-Auto subscription/key is required for inference.** The installer doesn't download models, make authenticated remote API requests, or store any keys. Use `omp models yolo-auto` to check discovery after login. Docs: <https://yolo-auto.com/docs#agent-oh-my-pi>.
+Default model: `yolo-auto/qwen3.8-27b`; choose a different entitled model with `/model` if appropriate. A paid Yolo-Auto subscription/key is required for inference. The installer doesn't download models, make authenticated remote API requests, or store any keys. Use `omp models yolo-auto` to check discovery after login. Docs: <https://yolo-auto.com/docs#agent-oh-my-pi>.
 
 Native OMP profiles:
 
@@ -142,18 +209,18 @@ Native OMP profiles:
 
 Both are isolated from Claude/Codex/Gemini/OpenCode imported capability discovery. Working explicitly denies Blender by name; Private defines Blender MCP. Skills are symlinks to our profile-specific stack-owned package directory; unrelated existing OMP profile files are not overwritten. To audit isolation: `mm-yolo-doctor` and `./setup-yolo-omp.sh --check`.
 
-**Important limitation:** User/repository-owned project `.omp/` configuration may still add other skills/tools. Treat project-controlled MCP configuration as trusted source and inspect on first use. Local profile separation does **not** separate remote Yolo- or Codex-account privacy/terms; apply employer policies before sending company code.
+Important limitation: User/repository-owned project `.omp/` configuration may still add other skills/tools. Treat project-controlled MCP configuration as trusted source and inspect on first use. Local profile separation does not separate remote Yolo- or Codex-account privacy/terms; apply employer policies before sending company code.
 
 ## OMP improvements in v3.13.2
 
-The installer adds a dedicated **OMP-only** `mm-omp-code-workflow` skill to both named OMP profiles. It guides the built-in LSP/task/worktree tools, verified handoffs through TinyContext and safe optional extensions. It is **not linked into Claude Code or Codex**. No extra MCP servers or background services are installed.
+The installer adds a dedicated OMP-only `mm-omp-code-workflow` skill to both named OMP profiles. It guides the built-in LSP/task/worktree tools, verified handoffs through TinyContext and safe optional extensions. It is not linked into Claude Code or Codex. No extra MCP servers or background services are installed.
 
 Read [the OMP / Skill update review](docs/UPDATES_OMP_SKILLS_2026-10-29.md) for the current feature recommendations, optional plan-first extension and GitHub MCP v2 migration caution.
 
 ## Extra integrations worth considering (opt-in, not bundled)
 
-1. [Official Yolo-Auto plan-first Todo extension](https://github.com/yolo-auto-org/yolo-auto-omp) for `/model yolo-auto/yolo`. Install into **each intended named profile's** `agent/extensions/` only after reviewing the TypeScript source. We do not execute arbitrary remote TypeScript during Stack install.
-2. OMP already has native **MCP**, **LSP** and **task/subagent** capabilities. Prefer those built-ins; do not add a second MCP adapter or another memory backend while TinyContext is working.
+1. [Official Yolo-Auto plan-first Todo extension](https://github.com/yolo-auto-org/yolo-auto-omp) for `/model yolo-auto/yolo`. Install into each intended named profile's `agent/extensions/` only after reviewing the TypeScript source. We do not execute arbitrary remote TypeScript during Stack install.
+2. OMP already has native MCP, LSP and task/subagent capabilities. Prefer those built-ins; do not add a second MCP adapter or another memory backend while TinyContext is working.
 3. Keep TinySearch as the common search MCP instead of adding redundant third-party web-search extensions by default.
 
 See [docs/YOLO_OMP.md](docs/YOLO_OMP.md) for troubleshooting, credentials, and precise profile isolation.
@@ -189,11 +256,11 @@ No Codex automatic rotation or bundled Blender skills have been reintroduced.
 
 ## Zed Delta removal (v3.13.4)
 
-Unlike the normal **Zed editor**, Zed **Delta** is no longer part of this stack.
+Unlike the normal Zed editor, Zed Delta is no longer part of this stack.
 During installation, recognized `~/.local/delta.app`, its `~/.local/bin/delta` link,
 verified Delta desktop entries, Claude's official `delta@zed-industries` plugin
 and Zed Delta-specific MCP registrations for Claude/Codex/OMP are removed or moved
-into private, recoverable backups. The unrelated **mcpdelta** product is untouched.
+into private, recoverable backups. The unrelated mcpdelta product is untouched.
 
 ```bash
 ./remove-zed-delta.sh --scan     # no changes
@@ -203,5 +270,63 @@ into private, recoverable backups. The unrelated **mcpdelta** product is untouch
 
 See `docs/ZED_DELTA_REMOVAL.md` for project-specific notes and recovery.
 
-**New OMP launchers**: `omp-working` and `omp-private` are fully supported;
+New OMP launchers: `omp-working` and `omp-private` are fully supported;
 `yolo-working` / `yolo-private` remain identical compatibility commands.
+
+## Maintenance and rollback
+
+Run installation commands from this package directory. Run memory and skill
+precedence diagnostics from the project whose context you want to inspect.
+
+```bash
+mm-skill-audit --profile both --client all --plugins --strict
+mm-skill-precedence-doctor private
+MM_AGENT_PROFILE=private mm-project-memory-doctor
+MM_AGENT_PROFILE=working mm-project-memory-doctor
+```
+
+The skill audit checks metadata, conflicts and managed installation drift. Plugin
+cache entries are reported separately; a cached skill is not proof that a session
+has activated it. A clean audit also does not prove that every external service is
+running or that its account has permission to access a project.
+
+Update only the lane you need:
+
+```bash
+mm-stack-update --skills       # optional upstream Vercel Working skills
+mm-stack-update --memory      # TinyContext registration update
+mm-stack-update --plugins     # optional installed Claude skill-creator plugin
+```
+
+These commands do not update your entire independently installed skill collection.
+The default `mm-stack-update` lane is `--skills`. Raw Figma skills require explicit
+selection and a duplicate-plugin review. See the [skill guide](docs/SKILL_USAGE.md)
+for the distinction between refreshing bundled and upstream skills.
+
+To restore the most recent full-install backup:
+
+```bash
+./rollback-profiles.sh
+# Or select a particular full-install backup:
+./rollback-profiles.sh /absolute/path/to/backup-directory
+./verify-profiles.sh
+```
+
+Full-install backups live under `~/.frontend-ai-stack-backups/`; the latest path
+is recorded in `~/.frontend-ai-stack-last-backup`. The skills-only refresh instead
+prints a `~/.frontend-ai-stack-skills-backup.*` directory. That narrow snapshot has
+a different layout and is not an input to the full rollback script. Inspect it
+before restoring its skills/rules or audit helper manually.
+
+## Documentation map
+
+| Guide | What it covers |
+|---|---|
+| [Skill usage](docs/SKILL_USAGE.md) | Client invocation, examples, inventory, precedence and troubleshooting |
+| [Fedora setup](docs/FEDORA_FRAMEWORK_16.md) | Host prerequisites and direct CLI setup |
+| [Global MCPs](docs/GLOBAL_MCPS.md) | Common search and memory integrations |
+| [YOLO-Auto / OMP](docs/YOLO_OMP.md) | Named profiles, credentials and isolation |
+| [Advanced OMP features](docs/OMP_ADVANCED_FEATURES.md) | Optional extensions, completions and desktop/browser choices |
+| [Game runtime](docs/GAMEDEV_RUNTIME.md) | Private game-development runtime setup |
+| [Delta removal](docs/ZED_DELTA_REMOVAL.md) | Targeted cleanup and recovery |
+| [Changelog](CHANGELOG.md) | Changes by package version |

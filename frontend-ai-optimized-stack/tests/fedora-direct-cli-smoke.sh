@@ -157,7 +157,7 @@ PYTH
 "$HOME/.local/bin/omp-working" --version
 "$HOME/.local/bin/omp-private" --version
 [[ -L "$HOME/.omp/profiles/working/agent/skills/project-memory" ]]
-[[ -L "$HOME/.omp/profiles/private/agent/skills/mm-game-project-engineering" ]]
+[[ -L "$HOME/.omp/profiles/private/agent/skills/mm-github-workflow" ]]
 # OMP-only skill is present in both named OMP profiles, never in Claude/Codex.
 for profile in working private; do
   [[ -L "$HOME/.omp/profiles/$profile/agent/skills/mm-omp-code-workflow" ]]

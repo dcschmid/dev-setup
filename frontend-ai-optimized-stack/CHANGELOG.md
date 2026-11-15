@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Remove the five private Astro and game workflow skills requested for retirement.
+
+- Remove the seven bundled accessibility skills and their shared payloads from Private and Working profiles.
+
 ## v3.15.1 — Blender MCP 2.2.7 (2026-11-11)
 
 - Pin the private Blender MCP to `mcp-for-blender@2.2.7` (PyPI wheel sha256 `2fd2ad6f9304f8217167c08dc61c18642bc08a9f43fb2c3988eee4851640472c`) in `codex-private`, the generated `private-blender.json`, the OMP private profile and the add-on installer. Add-on protocol 15; verified against Blender 5.2.4 and 5.3.0 (21 checks per pairing, also with the 2.2.0 server/add-on) in the Riff Racers sprint (`docs/engineering/blender-5.3/blender-mcp-upgrade.md`).

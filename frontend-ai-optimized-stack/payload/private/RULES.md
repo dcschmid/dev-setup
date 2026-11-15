@@ -3,6 +3,7 @@
 - OMP is YOLO-Auto only. Do not route OMP planning, execution, review, or fallback work to Codex or Claude.
 - Codex CLI and Claude Code are independent clients; they use their own wrappers and credentials.
 - Workspace/repository instructions and skills always outrank profile or shared package fallbacks.
+- Activate skills only for an explicit invocation or a concrete requirement of the current task. Start with names/descriptions; read only selected SKILL.md files and the references needed for the next step. Do not preload the collection, activate every related skill, or treat installation/discovery as activation. Repository-required checks still apply.
 - Ponytail is an implementation-simplification layer, not an authority over repository requirements. Workspace rules, validated architecture, compatibility, performance, persistence, multiplayer, input/controller, accessibility, and asset/runtime contracts outrank Ponytail deletion/YAGNI pressure.
 - Private frontend work is Astro-first. Do not introduce React or Next.js unless the repository itself already requires them.
 - Prefer current Astro documentation via the Astro Docs MCP when available; otherwise use the official Astro documentation website.

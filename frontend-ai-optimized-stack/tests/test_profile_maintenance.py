@@ -113,6 +113,58 @@ command = "/missing/riff-asset-forge/.venv/bin/tool"
         self.put(self.repo / '.claude/skills/b/SKILL.md', '---\nname: duplicate\ndescription: B\n---\nTwo\n')
         self.run_tool('mm-skill-audit', '--profile', 'private', '--strict', ok=False)
 
+    def test_skills_only_refresh_preserves_runtime_and_user_files(self):
+        resolver = self.put(self.home / '.local/bin/mm-profile-skills-sync',
+                            (ROOT / 'payload/bin/mm-profile-skills-sync').read_text())
+        resolver.chmod(0o755)
+        retired = self.put(self.stack / 'skills/shared/mm-ci-triage/SKILL.md', 'OLD')
+        custom = self.put(self.home / '.claude/skills/personal/SKILL.md', 'PERSONAL')
+        auth = self.put(self.home / '.codex/auth.json', 'CREDENTIAL_SENTINEL')
+        config = self.put(self.home / '.codex/config.toml', 'model = "keep"\n')
+        result = subprocess.run(['bash', str(ROOT / 'install-profiles.sh'), '--skills-only'],
+                                env=self.env, cwd=self.repo, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertFalse(retired.exists())
+        self.assertEqual(custom.read_text(), 'PERSONAL')
+        self.assertEqual(auth.read_text(), 'CREDENTIAL_SENTINEL')
+        self.assertEqual(config.read_text(), 'model = "keep"\n')
+        self.assertTrue((self.stack / 'skills/private/local-image-ai/.local-image-ai-receipt.json').is_file())
+        self.assertIn('Do not preload the collection',
+                      (self.stack / 'rules/private.md').read_text())
+        backups = list(self.home.glob('.frontend-ai-stack-skills-backup.*'))
+        self.assertEqual(len(backups), 1)
+        self.assertEqual((backups[0] / 'skills/shared/mm-ci-triage/SKILL.md').read_text(), 'OLD')
+        self.assertFalse(any(p.name == 'auth.json' for p in backups[0].rglob('*')))
+
+    def test_synced_claude_skills_have_account_scopes(self):
+        root = self.home / '.claude/skills/synced'
+        for account in ('account-a', 'account-b'):
+            self.put(root / account / 'docx/SKILL.md',
+                     f'---\nname: docx\ndescription: Documents\n---\n{account}\n')
+        result = self.run_tool('mm-skill-audit', '--profile', 'private',
+                               '--strict', '--json')
+        report = json.loads(result.stdout)
+        self.assertEqual(len(report['skills']), 2)
+        self.assertEqual(report['problems'], [])
+        self.assertTrue(all('account-scoped' in row['info'][0]
+                            for row in report['skills']))
+        self.put(root / 'account-a/duplicate/SKILL.md',
+                 '---\nname: docx\ndescription: Different\n---\nConflict\n')
+        self.run_tool('mm-skill-audit', '--profile', 'private', '--strict', ok=False)
+
+    def test_profile_prompts_keep_skills_on_demand(self):
+        for profile in ('private', 'working'):
+            result = self.run_tool('mm-profile-runtime', 'prompt', profile)
+            self.assertIn('Do not preload the collection', result.stdout)
+            self.assertIn('current task', result.stdout)
+            self.assertNotIn('SKILL_BODY_SENTINEL', result.stdout)
+            # A large available skill must never be appended to profile rules.
+            self.put(self.stack / f'skills/{profile}/large/SKILL.md',
+                     '---\nname: large\ndescription: Fixture\n---\n' +
+                     'SKILL_BODY_SENTINEL\n' * 1000)
+            again = self.run_tool('mm-profile-runtime', 'prompt', profile)
+            self.assertEqual(result.stdout, again.stdout)
+
     def test_upstream_missing_skill_does_not_replace_existing(self):
         source = self.home / 'upstream-fixture'
         self.put(source / 'skills/react-best-practices/SKILL.md', '---\nname: react\ndescription: Fixture\n---\nNew\n')

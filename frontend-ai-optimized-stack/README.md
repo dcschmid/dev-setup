@@ -4,6 +4,7 @@
 
 - OMP settings survive the client's YAML save cycle; existing per-profile browser/computer choices are retained. Python needs PyYAML (`python3-pyyaml` on Fedora).
 - Profile rules are delivered through Codex `AGENTS.md` and appended Claude/OMP system prompts. User and repository instructions take precedence.
+- Skills stay on demand: wrappers expose available skills without appending their bodies. Select skills for the current task, then read only required references. Discovery is not activation; automatic selection remains model judgment. Claude synchronized account stores are audited separately.
 - Working Codex uses an independent config with only the common MCPs inherited at migration. Its login remains separate. Working Claude uses common global MCPs plus project registrations, excluding known Private integrations. Add additional Working-only Codex MCPs to its own config explicitly.
 - Shared skills now include CI triage, PR/MR review follow-up, Playwright browser automation and a stack-maintenance guide.
 - `mm-skill-audit --strict --plugins --profile both` validates YAML metadata, installed asset drift and symlinked skills. Plugin cache files are labeled separately from active capabilities.
@@ -11,6 +12,8 @@
 
 ```bash
 ./install-profiles.sh
+# For an existing installation: refresh only managed skills/rules, without MCP/login/runtime changes:
+./install-profiles.sh --skills-only
 ./verify-profiles.sh
 ./setup-workflow-tools.py --install  # optional verified gh/glab/ShellCheck + Playwright CLI/Firefox
 ./install-working-upstream-skills.sh --only vercel

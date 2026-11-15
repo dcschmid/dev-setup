@@ -5,6 +5,49 @@ umask 077
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 command -v python3 >/dev/null || { echo 'ERROR: python3 missing.' >&2; exit 1; }
 python3 -c 'import yaml' 2>/dev/null || { echo 'ERROR: PyYAML missing (Fedora: python3-pyyaml).' >&2; exit 1; }
+# Shared by full installation and the narrow, credential-free skill refresh.
+install_skill_payload() {
+mkdir -p "$STACK_ROOT/skills"
+for profile in shared private working omp; do
+  mkdir -p "$STACK_ROOT/skills/$profile"
+  # Existing canonical package contents are superseded by this package.
+  # Backups above allow precise rollback.
+  # Preserve optional upstream skills across normal stack upgrades. Retire only
+  # known owned skills; bundled definitions are refreshed below.
+  for retired in mm-blender-asset-pipeline mm-blender-defold-handoff mm-gamedev-core \
+    mm-ci-triage mm-review-followup mm-semgrep-security playwright; do
+    rm -rf -- "$STACK_ROOT/skills/$profile/$retired"
+  done
+  cp -a "$ROOT/payload/$profile/skills/." "$STACK_ROOT/skills/$profile/"
+done
+mkdir -p "$STACK_ROOT/rules"
+for profile in private working; do
+  install -m 0600 "$ROOT/payload/$profile/RULES.md" "$STACK_ROOT/rules/$profile.md"
+done
+}
+
+if [[ "${1:-}" == --skills-only ]]; then
+  [[ $# -eq 1 ]] || { echo 'ERROR: --skills-only takes no other arguments.' >&2; exit 2; }
+  STACK_ROOT="${MM_STACK_DATA_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/frontend-ai-stack}"
+  BACKUP=$(mktemp -d "$HOME/.frontend-ai-stack-skills-backup.XXXXXXXX")
+  for item in skills rules; do
+    [[ ! -d "$STACK_ROOT/$item" ]] || cp -a "$STACK_ROOT/$item" "$BACKUP/$item"
+  done
+  [[ ! -f "$HOME/.local/bin/mm-skill-audit" ]] || cp -a "$HOME/.local/bin/mm-skill-audit" "$BACKUP/mm-skill-audit"
+  install_skill_payload
+  install -m 0755 "$ROOT/payload/bin/mm-skill-audit" "$HOME/.local/bin/mm-skill-audit"
+  for client in codex claude omp; do
+    "$HOME/.local/bin/mm-profile-skills-sync" "$client" private --root "$PWD" --quiet
+  done
+  "$HOME/.local/bin/mm-profile-skills-sync" omp working --root "$PWD" --quiet
+  CODEX_HOME="${MM_CODEX_WORKING_HOME:-$STACK_ROOT/codex-working-home}" \
+    "$HOME/.local/bin/mm-profile-skills-sync" codex working --root "$PWD" --quiet
+  echo "PASS: managed skills and profile rules refreshed. Backup: $BACKUP"
+  echo 'Restart clients to load updated profile rules; Codex wrappers update their managed AGENTS.md block on launch.'
+  exit 0
+fi
+[[ $# -eq 0 ]] || { echo 'ERROR: expected no arguments or --skills-only.' >&2; exit 2; }
+
 # Validate first, before changing user files. Known v2.2.0/v2.2.7 global Blender
 # registrations will be snapshotted and migrated to the private-only overlay.
 # Unknown custom registrations fail safely and are never touched.
@@ -83,23 +126,7 @@ printf '%s\n' "$BACKUP" > "$HOME/.frontend-ai-stack-last-backup"
 # file backups as well for targeted recovery.
 python3 "$ROOT/scripts/migrate_global_blender.py" --apply
 python3 "$ROOT/scripts/check_blender_scope.py"
-mkdir -p "$STACK_ROOT/skills"
-for profile in shared private working omp; do
-  mkdir -p "$STACK_ROOT/skills/$profile"
-  # Existing canonical package contents are superseded by this package.
-  # Backups above allow precise rollback.
-  # Preserve optional upstream skills across normal stack upgrades. Retire only
-  # known owned skills; bundled definitions are refreshed below.
-  for retired in mm-blender-asset-pipeline mm-blender-defold-handoff mm-gamedev-core \
-    mm-ci-triage mm-review-followup mm-semgrep-security playwright; do
-    rm -rf -- "$STACK_ROOT/skills/$profile/$retired"
-  done
-  cp -a "$ROOT/payload/$profile/skills/." "$STACK_ROOT/skills/$profile/"
-done
-mkdir -p "$STACK_ROOT/rules"
-for profile in private working; do
-  install -m 0600 "$ROOT/payload/$profile/RULES.md" "$STACK_ROOT/rules/$profile.md"
-done
+install_skill_payload
 printf '%s\n' "$ROOT" > "$STACK_ROOT/source-root"
 for bin in "${BINS[@]}"; do install -m 0755 "$ROOT/payload/bin/$bin" "$HOME/.local/bin/$bin"; done
 # Remove obsolete managed shims only when bytes match the previous release.

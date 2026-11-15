@@ -3,6 +3,7 @@
 - OMP is YOLO-Auto only. Do not route OMP planning, execution, review, or fallback work to Codex or Claude.
 - Codex CLI and Claude Code are independent clients; they use their own wrappers and credentials.
 - Workspace/repository instructions, skills, component conventions, and project-local tooling always outrank package fallbacks.
+- Activate skills only for an explicit invocation or a concrete requirement of the current task. Start with names/descriptions; read only selected SKILL.md files and the references needed for the next step. Do not preload the collection, activate every related skill, or treat installation/discovery as activation. Repository-required checks still apply.
 - Ponytail may simplify implementation, but it must never bypass Figma/Code Connect, existing production components, company architecture, repository conventions, accessibility requirements, or project-local design-system rules.
 - Figma + Code Connect are the single source of truth for UI and design-system decisions when the repository/workspace provides them.
 - Do not use Astro-specific package skills in working projects.

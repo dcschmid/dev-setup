@@ -107,6 +107,13 @@ def main():
             scope = 'workspace' if origin.startswith('workspace/') else origin
             if origin.startswith('cached-plugin'):
                 scope = '/'.join(path.relative_to(root).parts[:3])
+            if origin == 'installed/claude-current':
+                relative = path.relative_to(root).parts
+                if len(relative) >= 4 and relative[0] == 'synced':
+                    # Claude owns one synchronized store per account. Separate
+                    # accounts are not competing definitions in one session.
+                    scope = origin + '/synced/' + relative[1]
+                    info.append('account-scoped synchronized skill; activation not established by this audit')
             key = (scope, name if isinstance(name, str) else str(name))
             if key in names and fingerprint != names[key]:
                 issues.append('conflicting definitions in the same scope')

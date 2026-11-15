@@ -1,5 +1,5 @@
-04fb2e2d84a9c19f430e4231293ae72c97d22b5c22f3a2738a85a2eaf9b3c682  ./CHANGELOG.md
-0208afe0dc67f531a175712efad443d67b6d68e22c40d7e98fae67c76c6d5afb  ./README.md
+9fa25d92ed5ecefaa4e54c06c4dcffcfadbb9bef2e1bcd82432fd5310ec609a5  ./CHANGELOG.md
+37c735b9fb5ad30d1495da36b3e47bf8c2c36e2e6422025a20b413948687515d  ./README.md
 8c7962ffb5e1d3436f4a89d5a20fbaff94457096f2bc4eb8c4fa55b0e4800f9f  ./VERSION
 fdfd0e7d23c2f9db3dd331f386bb8af2096c0333b1e130db182b3d9388d8f1a4  ./docs/BLENDER_AI_MCP_MIGRATION_2026-10-06.md
 dafdcc4f442d29a26556d3446382893ac31164f1390d7372bc0e77216a329cd6  ./docs/FEDORA_FRAMEWORK_16.md
@@ -13,7 +13,7 @@ edbd1da2d19dab5ed79fb8467c3ac6c9ec181d4be084a907dcf73b7fd2414b6e  ./docs/YOLO_OM
 e7df356a46856b28eaf3ac55b3e0ac10958ff13490889114d4469e340444893c  ./examples/figma-remote-reference.json
 caad3869a4b750e543831649ad7147b185f259751308ad58efad3daafc266ec6  ./examples/working-storybook-mcp.json
 77656fe87e02377e972fb59b591491c7b929f42ec9bacc6566aa5a4897c1fb01  ./fedora-prerequisites.sh
-a032f00f33acfa77b90781e37d5f040dc9e85e60adfc2b00d12a4bc68789e833  ./install-profiles.sh
+0e558dd3c4fc740d56b28eb2091659d8ad88ecf73e4b0900ba666c6a8c763f6e  ./install-profiles.sh
 92951481289a1b883b7cb7faa5dd4501049278bc51c73ce296c7e61d6a77a60f  ./install-working-upstream-skills.sh
 df395dadc6eaab862f23b08ba3bfaf191d725fa6eef46365489b05d421f98b66  ./legacy-hashes.sha256
 09a9e4f7d52618299bef448a60b262940465b19e69bc1326e9c01a68b1b22cca  ./payload/bin/claude-private
@@ -30,7 +30,7 @@ df395dadc6eaab862f23b08ba3bfaf191d725fa6eef46365489b05d421f98b66  ./legacy-hashe
 9b7701079de0905f247bce9149e02309392a0b89e6f0164b055f18c46a16b2f5  ./payload/bin/mm-project-memory-doctor
 f34b84d867ff29de9bb8acf53a4c26adb24c7c857fde63e57b4c324e5860d219  ./payload/bin/mm-refresh-skills
 3a6a86bad788f4577a42b8a5b56c491e5f0e4dd80d5b873b5f573660b61028a2  ./payload/bin/mm-runtime-update
-32b5b5cfecc9088b372d17d4bef3b1b1a2505b995dab9f0fdb22e2c414eaf06e  ./payload/bin/mm-skill-audit
+16594dfb37a9e3631e99fc847db6d176be12d0b83b4ff1231bcfcb269fcf810b  ./payload/bin/mm-skill-audit
 ab2a938b37c067cef13db71e020a4afa04e0190b96454918fff279e15a62d96b  ./payload/bin/mm-skill-precedence-doctor
 8039b34dae651b1003d81818e4b19f1790590136b4b5e8d37b7631ea0f37009a  ./payload/bin/mm-stack-audit
 57594296a41244cadc4c7555b6e3c0c8f30660e12b4bc1e41a0fc732afed0164  ./payload/bin/mm-stack-update
@@ -44,7 +44,7 @@ efe3608d51e165032be6678219ae9501b7ce0f2e788422aeee36db1cf48c0edb  ./payload/bin/
 d605ee493cc9a1ffd477cfee8fc7c7163395195e2cb7dc862f3d52c167f89a8b  ./payload/bin/yolo-private
 6de4dd7493020ce30ab6c230f65f955d1b74ea91504926d35937ebf38d001f2d  ./payload/bin/yolo-working
 e9fb2e87af34a565eda3ffe77ac8615d9853133f768f224f0f638c0f1868b7dc  ./payload/omp/skills/mm-omp-code-workflow/SKILL.md
-4862948b93323fabbb8d4edf54a4d9acd87ba6d70dac57f494169d23499270c6  ./payload/private/RULES.md
+a352f164c8e707726e83b52f2f671f8b6dfd01392e84690f641285079c09c36a  ./payload/private/RULES.md
 c5740c8b73dcaab7ee08e5dece5b06bc75d9bedbe9d94c3734b3fc7004b55c8b  ./payload/private/skills/local-image-ai/.local-image-ai-receipt.json
 40852fdabc21ffde1e53e6bee5b71b13be90702eb5d8d8c6aec299e8862e9ea1  ./payload/private/skills/local-image-ai/SKILL.md
 f1160167bf1a8bb68286165d252ad844cc43d99fc1005f69a6aabfd413ae98af  ./payload/private/skills/local-image-ai/agents/openai.yaml
@@ -53,7 +53,7 @@ a13da3963b641b4fb103d9dce40b09d243eac7156c818e94a7e1efa0151f6005  ./payload/priv
 cd1ca1c3c8096232af7c25d393a79b526487b39f10e5c26943c8a1f244260a03  ./payload/private/skills/mm-github-workflow/SKILL.md
 0c7b2f0a03d05736f0305133e9dfe5d444348fc29db949dcf736666cd33b70b7  ./payload/shared/skills/mm-stack-maintenance/SKILL.md
 c0794222eac5f898ef10dd7921df07b7d70027cccf57399cc40c1d362fa10435  ./payload/shared/skills/project-memory/SKILL.md
-ac9ce3cdf7c370b65c07118ff3c3653cc415edcc7c11d6a36988923878c4a706  ./payload/working/RULES.md
+fcc494d8586762413eb98e0e2ca574d547c2edb649168944d066111399f85b69  ./payload/working/RULES.md
 312af19fae2b2e27ecf58979daac34e6aa7e1a8edf3d58112e8bd8a780380b70  ./payload/working/skills/mm-figma-source-of-truth/SKILL.md
 b33a4a032322fefc6e5f2d9b0e3f308e79561f5d55b1e8b90de5066175767c2b  ./payload/working/skills/mm-gitlab-workflow/SKILL.md
 0439fd5bbea3cd44dd8d585b7aa22369e656903aae7f50de4b3fb41405d379f5  ./payload/working/skills/mm-storybook-workflow/SKILL.md
@@ -89,6 +89,6 @@ ababc17dea350483e13156f830f255c47f4e7e3844e8f10806d62f72f3cdb7d3  ./tests/fixtur
 9eb29fe2f6cc987c74f49412210151009ed1a9f9d1732004763adc9a2d0bcdd8  ./tests/omp-advanced-features-smoke.sh
 328be2b076701282638393d95a8538d4b7031928ff46b4478f87c4290af0827d  ./tests/omp-auto-install-smoke.sh
 a45417efda5afffb494f42a1d05383a3e08590c6a061e2ef40768aafabb70db9  ./tests/project-mcp-smoke.sh
-6fee7de99f879a4564f0fa959ae660732ee184169e95d16d927d63b68f6c98c3  ./tests/test_profile_maintenance.py
+32d4c6787778682bdbb649676eae6237f55a8dd54408b6d4a150984cf5c1e8b2  ./tests/test_profile_maintenance.py
 7d2ed7a0a7a3770d47b7fba68a5754d778cd97f62ea37dc56d30b7601ec720b5  ./tests/zed-delta-cleanup-smoke.sh
 1d111c01bd92501247d8099242790be66739ef5acca2d18fb8fcce5bee7baf49  ./verify-profiles.sh

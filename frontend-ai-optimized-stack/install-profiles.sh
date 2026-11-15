@@ -90,7 +90,8 @@ for profile in shared private working omp; do
   # Backups above allow precise rollback.
   # Preserve optional upstream skills across normal stack upgrades. Retire only
   # known owned skills; bundled definitions are refreshed below.
-  for retired in mm-blender-asset-pipeline mm-blender-defold-handoff mm-gamedev-core; do
+  for retired in mm-blender-asset-pipeline mm-blender-defold-handoff mm-gamedev-core \
+    mm-ci-triage mm-review-followup mm-semgrep-security playwright; do
     rm -rf -- "$STACK_ROOT/skills/$profile/$retired"
   done
   cp -a "$ROOT/payload/$profile/skills/." "$STACK_ROOT/skills/$profile/"

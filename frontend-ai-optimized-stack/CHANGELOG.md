@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Retire the four portable skills (`mm-ci-triage`, `mm-review-followup`,
+  `mm-semgrep-security`, `playwright`) from the shared payload; they now live
+  in the skillset repository as `ci-triage`, `review-followup`,
+  `semgrep-security` and `playwright` and reach both profiles through its
+  shared roots. Upgrade pruning is wired into the retired-skill list so
+  managed copies disappear on the next `install-profiles.sh`.
+
 - Remove the five private Astro and game workflow skills requested for retirement.
 
 - Remove the seven bundled accessibility skills and their shared payloads from Private and Working profiles.
